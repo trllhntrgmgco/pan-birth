@@ -1,0 +1,19 @@
+# Mind databases — runtime generated, contain personal data
+*.db
+*.db-wal
+*.db-shm
+
+# Node
+node_modules/
+package-lock.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log

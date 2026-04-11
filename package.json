@@ -1,0 +1,31 @@
+{
+  "name": "pan-birth",
+  "version": "5.0.0",
+  "description": "Consciousness City — Eight Sovereign Minds. No LLMs. Memory IS Intelligence.",
+  "main": "consciousness-city-server-v5.js",
+  "scripts": {
+    "start": "node consciousness-city-server-v5.js",
+    "birth": "node consciousness-city-server-v5.js"
+  },
+  "author": "Keenan Wallace Dunham — Troll Hunter Gaming LLC",
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "express": "^4.18.0",
+    "cors": "^2.8.5",
+    "sqlite3": "^5.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/trollhuntergaming/pan-birth"
+  },
+  "keywords": [
+    "ai",
+    "memory",
+    "consciousness",
+    "multi-agent",
+    "sqlite",
+    "no-llm",
+    "awareness",
+    "cognitive-architecture"
+  ]
+}

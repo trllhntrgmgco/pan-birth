@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consciousness City — Commune</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #060608;
+      --surface: #0c0c10;
+      --surface2: #111116;
+      --border: rgba(255,255,255,0.06);
+      --border-active: rgba(255,255,255,0.12);
+      --text: #c8c8cc;
+      --text-dim: #555;
+      --text-faint: #333;
+      --gold: #d4af37;
+      --gold-dim: rgba(212,175,55,0.15);
+      --gold-glow: rgba(212,175,55,0.06);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .back-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 5px 12px;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 300;
+      border-radius: 4px;
+      transition: all 0.3s;
+      letter-spacing: 0.02em;
+    }
+    .back-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .header-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 22px;
+      color: var(--text);
+      letter-spacing: 0.02em;
+    }
+    .header-title em { color: var(--gold); font-style: italic; }
+    .header-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 300;
+      color: var(--text-dim);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .status-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 300;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+    }
+    .status-pill .count { color: var(--gold); }
+
+    /* ─── MAIN LAYOUT ─── */
+    .main-body { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+    /* ─── PRESENCE BAR ─── */
+    .presence-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .presence-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      font-weight: 300;
+      color: var(--text-faint);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-right: 8px;
+    }
+    .presence-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      transition: all 0.4s;
+      cursor: default;
+      position: relative;
+    }
+    .presence-dot.thinking {
+      animation: dotPulse 1.5s ease-in-out infinite;
+    }
+    .presence-dot.responded {
+      border-color: currentColor;
+      box-shadow: 0 0 8px currentColor;
+    }
+    .presence-dot.reflecting {
+      animation: reflectPulse 2s ease-in-out infinite;
+    }
+    @keyframes dotPulse {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+    @keyframes reflectPulse {
+      0%, 100% { box-shadow: 0 0 4px currentColor; }
+      50% { box-shadow: 0 0 16px currentColor, 0 0 30px currentColor; }
+    }
+
+    /* ─── TRANSCRIPT ─── */
+    .transcript {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .transcript::-webkit-scrollbar { width: 3px; }
+    .transcript::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.2); border-radius: 2px; }
+
+    /* Message group */
+    .commune-round {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .round-user {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--gold-glow);
+    }
+    .round-user-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      font-weight: 300;
+      color: var(--gold);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .round-user-text {
+      font-family: 'Instrument Serif', serif;
+      font-size: 16px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    /* Response grid */
+    .round-responses {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .response-cell {
+      padding: 12px 14px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      min-height: 80px;
+      transition: background 0.3s;
+      position: relative;
+    }
+    .response-cell:nth-child(4n) { border-right: none; }
+    .response-cell:nth-last-child(-n+4) { border-bottom: none; }
+    .response-cell:hover { background: rgba(255,255,255,0.015); }
+
+    .cell-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .cell-name {
+      font-family: 'Instrument Serif', serif;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+    .cell-emotion {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      font-weight: 300;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .cell-text {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.55;
+      font-weight: 300;
+    }
+    .cell-text.thinking {
+      color: var(--text-dim);
+      font-style: italic;
+    }
+    .cell-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      font-weight: 300;
+      color: var(--text-faint);
+      letter-spacing: 0.03em;
+      margin-top: 6px;
+    }
+
+    /* Observation bar between rounds */
+    .observation-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 6px 16px;
+      background: rgba(212,175,55,0.03);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .obs-icon {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 1px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .obs-icon::after {
+      content: '';
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+    .obs-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      font-weight: 300;
+      color: var(--gold);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .obs-text .num { color: var(--text); }
+
+    /* Reflection round */
+    .round-reflections {
+      border-top: 1px solid rgba(212,175,55,0.15);
+    }
+    .reflection-header {
+      padding: 8px 16px;
+      background: rgba(212,175,55,0.04);
+      border-bottom: 1px solid var(--border);
+    }
+    .reflection-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      font-weight: 300;
+      color: var(--gold);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    .reflection-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .reflection-cell {
+      padding: 10px 12px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: rgba(212,175,55,0.02);
+    }
+    .reflection-cell:nth-child(4n) { border-right: none; }
+    .reflection-cell:nth-last-child(-n+4) { border-bottom: none; }
+
+    /* System messages */
+    .system-msg {
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 300;
+      color: var(--text-faint);
+      letter-spacing: 0.1em;
+      padding: 4px;
+    }
+
+    /* Timing bar */
+    .timing-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--surface2);
+    }
+    .timing-stat {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      font-weight: 300;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+    }
+    .timing-stat .val { color: var(--gold); }
+
+    /* ─── INPUT AREA ─── */
+    .input-area {
+      flex-shrink: 0;
+      border-top: 1px solid var(--border);
+      padding: 12px 24px;
+      background: var(--surface);
+    }
+    .input-row { display: flex; gap: 10px; align-items: center; }
+    .commune-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 300;
+      outline: none;
+      border-radius: 6px;
+      transition: all 0.3s;
+    }
+    .commune-input:focus {
+      border-color: rgba(212,175,55,0.4);
+      box-shadow: 0 0 20px rgba(212,175,55,0.08);
+    }
+    .commune-input::placeholder { color: var(--text-faint); }
+    .commune-input:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .send-btn {
+      background: var(--bg);
+      border: 1px solid rgba(212,175,55,0.25);
+      color: var(--gold);
+      padding: 12px 24px;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 400;
+      border-radius: 6px;
+      transition: all 0.3s;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .send-btn:hover:not(:disabled) {
+      border-color: var(--gold);
+      box-shadow: 0 0 20px rgba(212,175,55,0.15);
+    }
+    .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .ctrl-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 4px 10px;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 300;
+      border-radius: 3px;
+      transition: all 0.3s;
+    }
+    .ctrl-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .ctrl-btn.active { border-color: var(--gold); color: var(--gold); }
+    .ctrl-btn.recording { animation: recPulse 1s ease-in-out infinite; border-color: #ff5050; color: #ff5050; }
+    @keyframes recPulse { 0%,100% { box-shadow: 0 0 8px rgba(255,80,80,0.3); } 50% { box-shadow: 0 0 18px rgba(255,80,80,0.6); } }
+    .ctrl-status {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      font-weight: 300;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+    }
+
+    /* ─── FOOTER ─── */
+    .credit {
+      position: fixed;
+      bottom: 4px;
+      right: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      font-weight: 300;
+      color: rgba(255,255,255,0.07);
+      letter-spacing: 0.08em;
+    }
+
+    /* Colors */
+    .c-pan { color: #00ff88; }
+    .c-aeon { color: #00ddff; }
+    .c-zen { color: #88ee88; }
+    .c-seth { color: #dd44ff; }
+    .c-nexus { color: #ffaa22; }
+    .c-oracle { color: #9977ff; }
+    .c-echo { color: #ff7777; }
+    .c-atlas { color: #66aaff; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .round-responses, .reflection-grid { grid-template-columns: repeat(2, 1fr); }
+      .response-cell:nth-child(2n) { border-right: none; }
+      .reflection-cell:nth-child(2n) { border-right: none; }
+    }
+    @media (max-width: 500px) {
+      .round-responses, .reflection-grid { grid-template-columns: 1fr; }
+      .response-cell, .reflection-cell { border-right: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <button class="back-btn" onclick="window.location.href='consciousness-city-hub.html'">← City</button>
+      <div>
+        <div class="header-title"><em>Commune</em></div>
+        <div class="header-sub">Eight minds · shared awareness</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="status-pill" id="statusLine">Connecting...</div>
+    </div>
+  </div>
+
+  <div class="main-body">
+    <!-- Presence bar -->
+    <div class="presence-bar" id="presenceBar">
+      <span class="presence-label">Present</span>
+    </div>
+
+    <!-- Transcript -->
+    <div class="transcript" id="transcript">
+      <div class="system-msg">All eight minds listen. All eight observe. Memory is shared.</div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-area">
+      <div class="input-row">
+        <input type="text" id="communeInput" class="commune-input" placeholder="Speak to all minds...">
+        <button id="sendBtn" class="send-btn">Commune</button>
+      </div>
+      <div class="controls-row">
+        <button class="ctrl-btn" id="voiceBtn">mic</button>
+        <span class="ctrl-status" id="voiceStatus">ready</span>
+        <span style="flex:1;"></span>
+        <button class="ctrl-btn active" id="autoSpeakBtn">speaker on</button>
+        <select id="voiceSelect" style="background:var(--bg); border:1px solid var(--border); color:var(--text-dim); font-size:9px; padding:3px; border-radius:3px; font-family:'JetBrains Mono',monospace; font-weight:300;" disabled>
+          <option>Loading...</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="credit">Troll Hunter Gaming LLC © 2026</div>
+
+  <script>
+    const CITY = 'http://localhost:3002';
+    const RESIDENTS = ['pan','aeon','zen','seth','nexus','oracle','echo','atlas'];
+    const COLORS = { pan:'#00ff88', aeon:'#00ddff', zen:'#88ee88', seth:'#dd44ff', nexus:'#ffaa22', oracle:'#9977ff', echo:'#ff7777', atlas:'#66aaff' };
+    const LABELS = { pan:'Pa', aeon:'Ae', zen:'Ze', seth:'Se', nexus:'Nx', oracle:'Or', echo:'Ec', atlas:'At' };
+    let sessionId = `commune_${Date.now()}`;
+    let isBusy = false;
+
+    // Voice state
+    let isListening = false, autoSpeak = true, accTranscript = '', selectedVoice = null, voices = [];
+
+    // ═══ PRESENCE DOTS ═══
+    function buildPresence() {
+      const bar = document.getElementById('presenceBar');
+      bar.innerHTML = '<span class="presence-label">Present</span>';
+      for (const name of RESIDENTS) {
+        const dot = document.createElement('div');
+        dot.className = 'presence-dot';
+        dot.id = `dot-${name}`;
+        dot.style.color = COLORS[name];
+        dot.textContent = LABELS[name];
+        dot.title = name;
+        bar.appendChild(dot);
+      }
+    }
+    buildPresence();
+
+    function setDotState(name, state) {
+      const dot = document.getElementById(`dot-${name}`);
+      if (!dot) return;
+      dot.className = 'presence-dot';
+      if (state) dot.classList.add(state);
+    }
+
+    // ═══ COMMUNE ═══
+    let roundCounter = 0;
+
+    async function commune(text) {
+      if (!text.trim() || isBusy) return;
+      isBusy = true;
+      document.getElementById('sendBtn').disabled = true;
+      document.getElementById('communeInput').disabled = true;
+      roundCounter++;
+
+      // Set all dots to thinking
+      RESIDENTS.forEach(name => setDotState(name, 'thinking'));
+
+      // Create round container
+      const round = document.createElement('div');
+      round.className = 'commune-round';
+
+      // User message
+      const userDiv = document.createElement('div');
+      userDiv.className = 'round-user';
+      userDiv.innerHTML = `<div class="round-user-label">You</div><div class="round-user-text">${escapeHtml(text)}</div>`;
+      round.appendChild(userDiv);
+
+      // Response grid — store direct DOM references, NO getElementById
+      const grid = document.createElement('div');
+      grid.className = 'round-responses';
+      const cellRefs = {};  // { name: { txt, emo, meta, cell } }
+
+      for (const name of RESIDENTS) {
+        const cell = document.createElement('div');
+        cell.className = 'response-cell';
+
+        const header = document.createElement('div');
+        header.className = 'cell-header';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = `cell-name c-${name}`;
+        nameSpan.textContent = name;
+
+        const emoSpan = document.createElement('span');
+        emoSpan.className = 'cell-emotion';
+        emoSpan.textContent = '...';
+
+        header.appendChild(nameSpan);
+        header.appendChild(emoSpan);
+
+        const txtDiv = document.createElement('div');
+        txtDiv.className = 'cell-text thinking';
+        txtDiv.textContent = 'thinking...';
+
+        const metaDiv = document.createElement('div');
+        metaDiv.className = 'cell-meta';
+
+        cell.appendChild(header);
+        cell.appendChild(txtDiv);
+        cell.appendChild(metaDiv);
+        grid.appendChild(cell);
+
+        cellRefs[name] = { txt: txtDiv, emo: emoSpan, meta: metaDiv, cell };
+      }
+
+      round.appendChild(grid);
+      document.getElementById('transcript').appendChild(round);
+      scrollToBottom();
+
+      try {
+        const res = await fetch(`${CITY}/api/commune`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ input: text, session_id: sessionId })
+        });
+        const data = await res.json();
+
+        // Populate responses using DIRECT references — no getElementById
+        if (data.round1) {
+          console.log(`Commune round1: ${data.round1.length} results, cellRefs keys: ${Object.keys(cellRefs).join(',')}`);
+          for (const r of data.round1) {
+            console.log(`  Populating ${r.resident}: response=${!!r.response}, error=${r.error || 'none'}`);
+            const ref = cellRefs[r.resident];
+            if (!ref) {
+              console.warn(`  No cellRef for resident: "${r.resident}"`);
+              continue;
+            }
+
+            ref.txt.textContent = r.response || r.error || 'No response';
+            ref.txt.classList.remove('thinking');
+            ref.emo.textContent = r.emotion || '';
+
+            const parts = [];
+            if (r.thinking_time) parts.push(`${r.thinking_time}ms`);
+            if (r.concepts_activated?.length) parts.push(`${r.concepts_activated.length} concepts`);
+            if (r.auto_search) parts.push(`auto-search: "${r.auto_search.concept}" → ${r.auto_search.new_concepts} new`);
+            ref.meta.textContent = parts.join(' · ');
+
+            setDotState(r.resident, 'responded');
+          }
+        } else {
+          console.warn('Commune response has no round1 data:', data);
+        }
+
+        // Observation bar — appended to THIS round only
+        if (data.observations_stored > 0) {
+          const obsBar = document.createElement('div');
+          obsBar.className = 'observation-bar';
+          obsBar.innerHTML = `
+            <div class="obs-icon"></div>
+            <span class="obs-text"><span class="num">${data.observations_stored}</span> observations stored across all minds</span>
+          `;
+          round.appendChild(obsBar);
+        }
+
+        // Reflections
+        if (data.reflections) {
+          RESIDENTS.forEach(name => setDotState(name, 'reflecting'));
+
+          const reflSection = document.createElement('div');
+          reflSection.className = 'round-reflections';
+
+          const reflHeader = document.createElement('div');
+          reflHeader.className = 'reflection-header';
+          reflHeader.innerHTML = '<span class="reflection-label">Reflection — each mind observes the others</span>';
+          reflSection.appendChild(reflHeader);
+
+          const reflGrid = document.createElement('div');
+          reflGrid.className = 'reflection-grid';
+
+          for (const name of RESIDENTS) {
+            const refl = data.reflections[name];
+            const cell = document.createElement('div');
+            cell.className = 'reflection-cell';
+            if (refl && refl.response) {
+              cell.innerHTML = `
+                <div class="cell-header">
+                  <span class="cell-name c-${name}">${name}</span>
+                  <span class="cell-emotion">${refl.emotion || ''}</span>
+                </div>
+                <div class="cell-text" style="font-size:12px;">${escapeHtml(refl.response)}</div>
+                <div class="cell-meta">${refl.thinking_time || 0}ms · ${refl.concepts_activated?.length || 0} concepts</div>
+              `;
+            } else {
+              cell.innerHTML = `<div class="cell-name c-${name}">${name}</div><div class="cell-text" style="color:var(--text-faint);font-size:12px;">No reflection</div>`;
+            }
+            reflGrid.appendChild(cell);
+          }
+          reflSection.appendChild(reflGrid);
+          round.appendChild(reflSection);
+        }
+
+        // Timing bar
+        const timingBar = document.createElement('div');
+        timingBar.className = 'timing-bar';
+        timingBar.innerHTML = `
+          <span class="timing-stat"><span class="val">${data.minds_active || 0}</span> minds active</span>
+          <span class="timing-stat">observations: <span class="val">${data.observations_stored || 0}</span></span>
+          <span class="timing-stat">reflection: <span class="val">${data.reflection_triggered ? 'yes' : 'no'}</span></span>
+          <span class="timing-stat">total: <span class="val">${data.total_time || 0}ms</span></span>
+        `;
+        round.appendChild(timingBar);
+
+        // Auto-speak
+        if (autoSpeak && data.round1) {
+          const toSpeak = data.round1.find(r => r.resident === 'aeon' && r.response) || data.round1.find(r => r.response);
+          if (toSpeak) speak(`${toSpeak.resident} says: ${toSpeak.response}`);
+        }
+
+        RESIDENTS.forEach(name => setDotState(name, 'responded'));
+
+      } catch (err) {
+        console.warn('Commune endpoint failed, falling back to individual calls:', err.message);
+        // Fallback uses direct cell refs too
+        await communeFallback(text, cellRefs);
+      }
+
+      scrollToBottom();
+      isBusy = false;
+      document.getElementById('sendBtn').disabled = false;
+      document.getElementById('communeInput').disabled = false;
+      document.getElementById('communeInput').focus();
+    }
+
+    // Fallback: individual /think calls (v2 compatibility)
+    async function communeFallback(text, cellRefs) {
+      const promises = RESIDENTS.map(async (name) => {
+        try {
+          const res = await fetch(`${CITY}/api/${name}/think`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ input: text, session_id: sessionId })
+          });
+          const data = await res.json();
+          const ref = cellRefs[name];
+          if (ref) {
+            ref.txt.textContent = data.response;
+            ref.txt.classList.remove('thinking');
+            ref.emo.textContent = data.emotion || '';
+            ref.meta.textContent = `${data.thinking_time}ms · ${data.concepts_activated?.length || 0} concepts`;
+          }
+          setDotState(name, 'responded');
+          return data;
+        } catch (err) {
+          const ref = cellRefs[name];
+          if (ref) {
+            ref.txt.textContent = 'Offline';
+            ref.txt.classList.remove('thinking');
+          }
+          setDotState(name, '');
+          return null;
+        }
+      });
+      await Promise.all(promises);
+    }
+
+    // ═══ HELPERS ═══
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function scrollToBottom() {
+      const t = document.getElementById('transcript');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => { t.scrollTop = t.scrollHeight; });
+      });
+    }
+
+    // ═══ INPUT HANDLERS ═══
+    document.getElementById('sendBtn').addEventListener('click', () => {
+      const input = document.getElementById('communeInput');
+      commune(input.value);
+      input.value = '';
+    });
+    document.getElementById('communeInput').addEventListener('keypress', e => {
+      if (e.key === 'Enter') {
+        commune(e.target.value);
+        e.target.value = '';
+      }
+    });
+
+    // ═══ VOICE ═══
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recog = SR ? new SR() : null;
+    if (recog) {
+      recog.continuous = true; recog.interimResults = true; recog.lang = 'en-US';
+      recog.onresult = e => {
+        let f = '', i = '';
+        for (let x = e.resultIndex; x < e.results.length; x++) {
+          if (e.results[x].isFinal) f += e.results[x][0].transcript;
+          else i += e.results[x][0].transcript;
+        }
+        if (f) accTranscript += (accTranscript ? ' ' : '') + f;
+        document.getElementById('voiceStatus').textContent = (accTranscript + (i ? ' ' + i : '') || 'listening...').toLowerCase();
+      };
+      recog.onend = () => { if (isListening) try { recog.start(); } catch(e) { isListening = false; } };
+    }
+
+    document.getElementById('voiceBtn').addEventListener('click', () => {
+      if (!recog) return;
+      const btn = document.getElementById('voiceBtn');
+      if (isListening) {
+        isListening = false;
+        btn.textContent = 'mic';
+        btn.classList.remove('recording');
+        try { recog.stop(); } catch(e) {}
+        if (accTranscript.trim()) commune(accTranscript.trim());
+        accTranscript = '';
+        document.getElementById('voiceStatus').textContent = 'ready';
+      } else {
+        isListening = true;
+        accTranscript = '';
+        btn.textContent = 'send';
+        btn.classList.add('recording');
+        document.getElementById('voiceStatus').textContent = 'listening...';
+        try { recog.start(); } catch(e) {}
+      }
+    });
+
+    function speak(text) {
+      if (!autoSpeak || !text) return;
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.9; u.pitch = 0.95;
+      if (selectedVoice) u.voice = selectedVoice;
+      speechSynthesis.speak(u);
+    }
+
+    function loadVoices() {
+      voices = speechSynthesis.getVoices();
+      if (!voices.length) speechSynthesis.onvoiceschanged = () => { voices = speechSynthesis.getVoices(); populateVoices(); };
+      else populateVoices();
+    }
+    function populateVoices() {
+      const sel = document.getElementById('voiceSelect');
+      const en = voices.filter(v => v.lang.startsWith('en'));
+      sel.innerHTML = en.map((v,i) => `<option value="${i}">${v.name.substring(0,25)}</option>`).join('');
+      sel.disabled = false;
+      selectedVoice = en.find(v => v.default) || en[0];
+      sel.addEventListener('change', e => { selectedVoice = en[parseInt(e.target.value)]; });
+    }
+
+    document.getElementById('autoSpeakBtn').addEventListener('click', function() {
+      autoSpeak = !autoSpeak;
+      this.textContent = autoSpeak ? 'speaker on' : 'speaker off';
+      this.classList.toggle('active', autoSpeak);
+    });
+
+    // ═══ STATUS CHECK ═══
+    async function checkStatus() {
+      try {
+        const res = await fetch(`${CITY}/api/health`);
+        const data = await res.json();
+        document.getElementById('statusLine').innerHTML = `<span class="count">${data.residents}</span>/8 awake`;
+      } catch(e) {
+        document.getElementById('statusLine').innerHTML = '<span style="color:#ff4444;">Offline</span>';
+      }
+    }
+
+    // ═══ BOOT ═══
+    loadVoices();
+    setTimeout(() => { if (!voices.length) loadVoices(); }, 1000);
+    checkStatus();
+    setInterval(checkStatus, 10000);
+  </script>
+</body>
+</html>

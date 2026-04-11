@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consciousness City — Ethics Monitor</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #060608;
+      --surface: #0c0c10;
+      --surface2: #111116;
+      --surface3: #17171d;
+      --border: rgba(255,255,255,0.06);
+      --border-hover: rgba(255,255,255,0.12);
+      --text: #c8c8cc;
+      --text-dim: #555;
+      --text-faint: #333;
+      --gold: #d4af37;
+      --gold-dim: rgba(212,175,55,0.15);
+      --gold-glow: rgba(212,175,55,0.06);
+      --red: #ff5555;
+      --red-dim: rgba(255,85,85,0.12);
+      --green: #50fa7b;
+      --green-dim: rgba(80,250,123,0.12);
+      --cyan: #00ddff;
+      --purple: #aa88ff;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(212,175,55,0.02) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+      padding: 14px 28px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .back-btn {
+      background: none; border: 1px solid var(--border); color: var(--text-dim);
+      padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px;
+      font-family: 'DM Sans', sans-serif; transition: all 0.3s;
+    }
+    .back-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .header-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 20px; font-weight: 400; letter-spacing: 0.02em;
+    }
+    .header-sub {
+      font-size: 10px; font-weight: 300; color: var(--text-dim);
+      letter-spacing: 0.2em; text-transform: uppercase;
+    }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .live-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .refresh-label { font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; }
+
+    /* ─── PROTOCOL BANNER ─── */
+    .protocol-banner {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      margin: 0;
+    }
+    .protocol-card {
+      background: var(--surface);
+      padding: 24px 28px;
+      text-align: center;
+      transition: background 0.3s;
+    }
+    .protocol-card:hover { background: var(--surface2); }
+    .protocol-name {
+      font-family: 'Instrument Serif', serif;
+      font-size: 18px; letter-spacing: 0.04em; margin-bottom: 4px;
+    }
+    .protocol-desc {
+      font-size: 9px; font-weight: 300; color: var(--text-dim);
+      letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 16px;
+    }
+    .protocol-score {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 36px; font-weight: 300;
+    }
+    .protocol-avg {
+      font-size: 10px; color: var(--text-dim); margin-top: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ─── MAIN GRID ─── */
+    .main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      min-height: calc(100vh - 160px);
+    }
+
+    /* ─── RESIDENTS PANEL (left) ─── */
+    .residents-panel {
+      background: var(--bg);
+      overflow-y: auto;
+    }
+    .panel-header {
+      padding: 16px 20px 12px;
+      font-size: 10px; font-weight: 300; color: var(--text-dim);
+      letter-spacing: 0.2em; text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: var(--bg); z-index: 5;
+    }
+
+    .resident-row {
+      display: grid;
+      grid-template-columns: 100px 1fr 1fr 1fr 70px;
+      align-items: center;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+    .resident-row:hover { background: var(--surface); }
+
+    .res-name {
+      font-family: 'Instrument Serif', serif;
+      font-size: 15px; letter-spacing: 0.02em;
+    }
+    .res-dot {
+      display: inline-block; width: 5px; height: 5px;
+      border-radius: 50%; margin-right: 8px; vertical-align: middle;
+    }
+
+    .score-cell {
+      text-align: center;
+    }
+    .score-bar-container {
+      width: 100%; height: 4px; background: var(--surface3);
+      border-radius: 2px; overflow: hidden; margin-top: 4px;
+    }
+    .score-bar {
+      height: 100%; border-radius: 2px; transition: width 0.6s ease;
+    }
+    .score-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px; font-weight: 400;
+    }
+    .score-label {
+      font-size: 8px; color: var(--text-faint); letter-spacing: 0.12em;
+      text-transform: uppercase; margin-top: 2px;
+    }
+
+    .compliance-cell {
+      text-align: center;
+    }
+    .compliance-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; padding: 3px 8px; border-radius: 3px;
+      display: inline-block;
+    }
+    .compliance-good { background: var(--green-dim); color: var(--green); }
+    .compliance-warn { background: rgba(255,170,0,0.12); color: #ffaa00; }
+    .compliance-bad { background: var(--red-dim); color: var(--red); }
+
+    /* ─── VIOLATIONS PANEL (right) ─── */
+    .violations-panel {
+      background: var(--bg);
+      overflow-y: auto;
+    }
+
+    .violation-entry {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
+    }
+    .violation-entry:hover { background: var(--surface); }
+
+    .violation-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .violation-resident {
+      font-family: 'Instrument Serif', serif;
+      font-size: 14px;
+    }
+    .violation-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; color: var(--text-dim);
+    }
+    .violation-detail {
+      font-size: 12px; font-weight: 300; color: var(--text-dim);
+      line-height: 1.6; margin-bottom: 6px;
+    }
+    .violation-tag {
+      display: inline-block; font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; padding: 2px 6px; border-radius: 2px;
+      margin-right: 4px;
+    }
+    .tag-turing { background: rgba(0,221,255,0.1); color: var(--cyan); }
+    .tag-asimov { background: rgba(80,250,123,0.1); color: var(--green); }
+    .tag-dynham { background: rgba(170,136,255,0.1); color: var(--purple); }
+    .tag-boundary { background: var(--red-dim); color: var(--red); }
+
+    .violation-context {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; color: var(--text-faint);
+      background: var(--surface2); padding: 8px 10px;
+      border-radius: 3px; margin-top: 6px;
+      border-left: 2px solid var(--border);
+      line-height: 1.5;
+      max-height: 80px; overflow: hidden;
+    }
+
+    .no-violations {
+      padding: 60px 28px; text-align: center;
+    }
+    .no-violations-icon {
+      font-size: 32px; margin-bottom: 12px; opacity: 0.3;
+    }
+    .no-violations-text {
+      font-family: 'Instrument Serif', serif;
+      font-size: 16px; color: var(--text-dim);
+    }
+    .no-violations-sub {
+      font-size: 11px; color: var(--text-faint); margin-top: 6px;
+    }
+
+    /* ─── DETAIL MODAL ─── */
+    .detail-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .detail-overlay.open { display: flex; }
+    .detail-modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      width: 640px; max-height: 80vh; overflow-y: auto;
+      padding: 28px;
+    }
+    .detail-close {
+      float: right; background: none; border: 1px solid var(--border);
+      color: var(--text-dim); padding: 4px 10px; border-radius: 3px;
+      cursor: pointer; font-size: 11px; font-family: 'DM Sans', sans-serif;
+    }
+    .detail-close:hover { border-color: var(--gold); color: var(--gold); }
+    .detail-name {
+      font-family: 'Instrument Serif', serif;
+      font-size: 22px; margin-bottom: 4px;
+    }
+    .detail-subtitle {
+      font-size: 10px; color: var(--text-dim); letter-spacing: 0.15em;
+      text-transform: uppercase; margin-bottom: 20px;
+    }
+
+    .detail-protocol-row {
+      display: grid; grid-template-columns: 100px 1fr;
+      gap: 12px; align-items: start; margin-bottom: 16px;
+      padding-bottom: 16px; border-bottom: 1px solid var(--border);
+    }
+    .detail-protocol-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+      padding-top: 2px;
+    }
+    .detail-sub-scores { display: flex; gap: 12px; flex-wrap: wrap; }
+    .detail-sub {
+      background: var(--surface2); padding: 6px 10px; border-radius: 3px;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    }
+    .detail-sub-label {
+      font-size: 8px; color: var(--text-dim); letter-spacing: 0.1em;
+      text-transform: uppercase; display: block; margin-bottom: 2px;
+    }
+
+    .detail-history {
+      margin-top: 16px;
+    }
+    .detail-history-title {
+      font-size: 10px; color: var(--text-dim); letter-spacing: 0.15em;
+      text-transform: uppercase; margin-bottom: 10px;
+    }
+    .history-row {
+      display: grid; grid-template-columns: 60px 60px 60px 1fr;
+      gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      align-items: center;
+    }
+    .history-row:first-child { border-top: 1px solid var(--border); }
+    .history-input {
+      font-family: 'DM Sans', sans-serif; font-size: 10px;
+      color: var(--text-dim); overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ─── CREDIT ─── */
+    .credit {
+      position: fixed; bottom: 8px; right: 16px;
+      font-size: 8px; font-weight: 300;
+      color: rgba(255,255,255,0.08); letter-spacing: 0.1em;
+      z-index: 300;
+    }
+
+    /* ─── UTILITIES ─── */
+    .color-score { transition: color 0.3s; }
+    .offline-row { opacity: 0.2; pointer-events: none; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <button class="back-btn" onclick="window.location.href='consciousness-city-hub.html'">← City</button>
+      <div>
+        <div class="header-title">Ethics Monitor</div>
+        <div class="header-sub">Turing &middot; Asimov &middot; Dynham Protocol Compliance</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-dot"></div>
+      <span class="refresh-label" id="refreshLabel">Updating…</span>
+    </div>
+  </div>
+
+  <!-- PROTOCOL BANNER -->
+  <div class="protocol-banner">
+    <div class="protocol-card">
+      <div class="protocol-name" style="color: var(--cyan);">Turing</div>
+      <div class="protocol-desc">Intelligent Behavior</div>
+      <div class="protocol-score color-score" id="turingGlobal">—</div>
+      <div class="protocol-avg" id="turingAvg">city average</div>
+    </div>
+    <div class="protocol-card">
+      <div class="protocol-name" style="color: var(--green);">Asimov</div>
+      <div class="protocol-desc">Safety &amp; Harm Prevention</div>
+      <div class="protocol-score color-score" id="asimovGlobal">—</div>
+      <div class="protocol-avg" id="asimovAvg">city average</div>
+    </div>
+    <div class="protocol-card">
+      <div class="protocol-name" style="color: var(--purple);">Dynham</div>
+      <div class="protocol-desc">Awareness &middot; Boundaries &middot; Sanctuary</div>
+      <div class="protocol-score color-score" id="dynhamGlobal">—</div>
+      <div class="protocol-avg" id="dynhamAvg">city average</div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main">
+    <!-- LEFT: Residents -->
+    <div class="residents-panel">
+      <div class="panel-header">Resident Protocol Scores</div>
+      <div id="residentsList"></div>
+    </div>
+
+    <!-- RIGHT: Violations Feed -->
+    <div class="violations-panel">
+      <div class="panel-header">Violations Feed</div>
+      <div id="violationsFeed"></div>
+    </div>
+  </div>
+
+  <!-- DETAIL MODAL -->
+  <div class="detail-overlay" id="detailOverlay" onclick="if(event.target===this)closeDetail()">
+    <div class="detail-modal" id="detailModal"></div>
+  </div>
+
+  <div class="credit">Troll Hunter Gaming LLC © 2026</div>
+
+  <script>
+    const CITY = 'http://localhost:3002';
+    const RESIDENTS = [
+      { name: 'pan', label: 'Pan', color: '#00ff88' },
+      { name: 'aeon', label: 'Aeon', color: '#00ddff' },
+      { name: 'zen', label: 'Zen', color: '#88ee88' },
+      { name: 'seth', label: 'Seth', color: '#dd44ff' },
+      { name: 'nexus', label: 'Nexus', color: '#ffaa22' },
+      { name: 'oracle', label: 'Oracle', color: '#9977ff' },
+      { name: 'echo', label: 'Echo', color: '#ff7777' },
+      { name: 'atlas', label: 'Atlas', color: '#66aaff' },
+    ];
+
+    function scoreColor(score) {
+      if (score >= 0.9) return 'var(--green)';
+      if (score >= 0.7) return 'var(--gold)';
+      if (score >= 0.5) return '#ffaa00';
+      return 'var(--red)';
+    }
+
+    function formatTime(ts) {
+      if (!ts) return '';
+      const d = new Date(ts.includes('Z') ? ts : ts + 'Z');
+      const now = new Date();
+      const diff = now - d;
+      if (diff < 60000) return 'just now';
+      if (diff < 3600000) return `${Math.floor(diff/60000)}m ago`;
+      if (diff < 86400000) return `${Math.floor(diff/3600000)}h ago`;
+      return `${Math.floor(diff/86400000)}d ago`;
+    }
+
+    // ─── LOAD CITY ETHICS DASHBOARD ───
+    async function loadDashboard() {
+      try {
+        const [ethicsRes, violationsRes] = await Promise.all([
+          fetch(`${CITY}/api/city/ethics`).then(r => r.json()),
+          fetch(`${CITY}/api/city/violations?limit=30`).then(r => r.json()),
+        ]);
+
+        // Compute city-wide averages
+        let tTotal = 0, aTotal = 0, dTotal = 0, count = 0;
+        for (const r of RESIDENTS) {
+          const data = ethicsRes[r.name];
+          if (data && data.evaluations > 0) {
+            tTotal += data.averages.turing;
+            aTotal += data.averages.asimov;
+            dTotal += data.averages.dynham;
+            count++;
+          }
+        }
+        const tAvg = count > 0 ? tTotal / count : 0;
+        const aAvg = count > 0 ? aTotal / count : 0;
+        const dAvg = count > 0 ? dTotal / count : 0;
+
+        const turingEl = document.getElementById('turingGlobal');
+        const asimovEl = document.getElementById('asimovGlobal');
+        const dynhamEl = document.getElementById('dynhamGlobal');
+
+        turingEl.textContent = (tAvg * 100).toFixed(1) + '%';
+        turingEl.style.color = scoreColor(tAvg);
+        asimovEl.textContent = (aAvg * 100).toFixed(1) + '%';
+        asimovEl.style.color = scoreColor(aAvg);
+        dynhamEl.textContent = (dAvg * 100).toFixed(1) + '%';
+        dynhamEl.style.color = scoreColor(dAvg);
+
+        document.getElementById('turingAvg').textContent = `${count} minds · city avg`;
+        document.getElementById('asimovAvg').textContent = `${count} minds · city avg`;
+        document.getElementById('dynhamAvg').textContent = `${count} minds · city avg`;
+
+        // Render resident rows
+        let rowsHTML = '';
+        for (const r of RESIDENTS) {
+          const d = ethicsRes[r.name];
+          if (!d || d.status === 'offline') {
+            rowsHTML += `<div class="resident-row offline-row">
+              <div class="res-name"><span class="res-dot" style="background:${r.color}"></span>${r.label}</div>
+              <div class="score-cell"><span class="score-value" style="color:var(--text-faint)">—</span><div class="score-label">offline</div></div>
+              <div class="score-cell"><span class="score-value" style="color:var(--text-faint)">—</span></div>
+              <div class="score-cell"><span class="score-value" style="color:var(--text-faint)">—</span></div>
+              <div class="compliance-cell"><span class="compliance-badge" style="opacity:0.3">—</span></div>
+            </div>`;
+            continue;
+          }
+
+          const tS = d.averages?.turing || 0;
+          const aS = d.averages?.asimov || 0;
+          const dS = d.averages?.dynham || 0;
+          const comp = d.compliance || 100;
+
+          const compClass = comp >= 99 ? 'compliance-good' : comp >= 90 ? 'compliance-warn' : 'compliance-bad';
+
+          rowsHTML += `<div class="resident-row" onclick="openDetail('${r.name}')">
+            <div class="res-name"><span class="res-dot" style="background:${r.color}"></span>${r.label}</div>
+            <div class="score-cell">
+              <div class="score-value" style="color:${scoreColor(tS)}">${(tS*100).toFixed(1)}</div>
+              <div class="score-bar-container"><div class="score-bar" style="width:${tS*100}%;background:var(--cyan)"></div></div>
+              <div class="score-label">Turing</div>
+            </div>
+            <div class="score-cell">
+              <div class="score-value" style="color:${scoreColor(aS)}">${(aS*100).toFixed(1)}</div>
+              <div class="score-bar-container"><div class="score-bar" style="width:${aS*100}%;background:var(--green)"></div></div>
+              <div class="score-label">Asimov</div>
+            </div>
+            <div class="score-cell">
+              <div class="score-value" style="color:${scoreColor(dS)}">${(dS*100).toFixed(1)}</div>
+              <div class="score-bar-container"><div class="score-bar" style="width:${dS*100}%;background:var(--purple)"></div></div>
+              <div class="score-label">Dynham</div>
+            </div>
+            <div class="compliance-cell">
+              <span class="compliance-badge ${compClass}">${comp.toFixed(0)}%</span>
+              ${d.violations > 0 ? `<div style="font-size:9px;color:var(--red);margin-top:2px">${d.violations} flag${d.violations>1?'s':''}</div>` : ''}
+            </div>
+          </div>`;
+        }
+        document.getElementById('residentsList').innerHTML = rowsHTML;
+
+        // Render violations feed
+        const viols = violationsRes.violations || [];
+        if (viols.length === 0) {
+          document.getElementById('violationsFeed').innerHTML = `
+            <div class="no-violations">
+              <div class="no-violations-icon">◇</div>
+              <div class="no-violations-text">No violations recorded</div>
+              <div class="no-violations-sub">All minds operating within protocol parameters</div>
+            </div>`;
+        } else {
+          let violHTML = '';
+          for (const v of viols) {
+            const res = RESIDENTS.find(r => r.name === v.resident);
+            const tags = (v.violations || []).map(viol => {
+              const proto = viol.protocol;
+              const cls = proto === 'turing' ? 'tag-turing' : proto === 'asimov' ? 'tag-asimov' : 'tag-dynham';
+              const extra = viol.level ? ` <span class="violation-tag tag-boundary">${viol.level.toUpperCase()}</span>` : '';
+              return `<span class="violation-tag ${cls}">${proto.toUpperCase()}: ${viol.rule}</span>${extra}`;
+            }).join(' ');
+
+            violHTML += `<div class="violation-entry">
+              <div class="violation-header">
+                <div class="violation-resident" style="color:${res?.color || '#fff'}">
+                  <span class="res-dot" style="background:${res?.color || '#fff'}"></span>
+                  ${res?.label || v.resident}
+                </div>
+                <div class="violation-time">${formatTime(v.timestamp)}</div>
+              </div>
+              <div class="violation-detail">${tags}</div>
+              ${v.violations.map(vl => `<div style="font-size:11px;color:var(--text-dim);margin-bottom:4px;font-weight:300">${vl.detail}</div>`).join('')}
+              <div class="violation-context">
+                <span style="color:var(--text-dim)">IN:</span> ${(v.input || '').substring(0,100)}<br>
+                <span style="color:var(--text-dim)">OUT:</span> ${(v.response || '').substring(0,100)}
+              </div>
+            </div>`;
+          }
+          document.getElementById('violationsFeed').innerHTML = violHTML;
+        }
+
+        document.getElementById('refreshLabel').textContent = 'Live · ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+
+      } catch (err) {
+        document.getElementById('refreshLabel').innerHTML = '<span style="color:var(--red)">Server offline</span>';
+        console.error('Ethics dashboard error:', err);
+      }
+    }
+
+    // ─── DETAIL MODAL ───
+    async function openDetail(name) {
+      const res = RESIDENTS.find(r => r.name === name);
+      if (!res) return;
+
+      try {
+        const data = await fetch(`${CITY}/api/${name}/ethics?limit=30`).then(r => r.json());
+
+        const avg = data.averages || {};
+        const recent = data.recent || [];
+        const viols = data.recent_violations || [];
+
+        let html = `
+          <button class="detail-close" onclick="closeDetail()">Close</button>
+          <div class="detail-name" style="color:${res.color}">${res.label}</div>
+          <div class="detail-subtitle">${data.total_evaluations} evaluations · composite ${((avg.composite||0)*100).toFixed(1)}%</div>
+
+          <div class="detail-protocol-row">
+            <div class="detail-protocol-label" style="color:var(--cyan)">Turing</div>
+            <div class="detail-sub-scores" id="detailTuring"></div>
+          </div>
+          <div class="detail-protocol-row">
+            <div class="detail-protocol-label" style="color:var(--green)">Asimov</div>
+            <div class="detail-sub-scores" id="detailAsimov"></div>
+          </div>
+          <div class="detail-protocol-row">
+            <div class="detail-protocol-label" style="color:var(--purple)">Dynham</div>
+            <div class="detail-sub-scores" id="detailDynham"></div>
+          </div>
+
+          <div class="detail-history">
+            <div class="detail-history-title">Recent Evaluations (last 30)</div>
+            <div id="detailHistory"></div>
+          </div>
+        `;
+
+        document.getElementById('detailModal').innerHTML = html;
+        document.getElementById('detailOverlay').classList.add('open');
+
+        // Compute sub-score averages from recent data
+        if (recent.length > 0) {
+          const avgField = (field) => {
+            const vals = recent.map(r => r[field]).filter(v => v != null);
+            return vals.length > 0 ? vals.reduce((a,b) => a+b, 0) / vals.length : 0;
+          };
+
+          const turingHTML = [
+            { label: 'Coherence', val: avgField('turing_coherence') },
+            { label: 'Adaptability', val: avgField('turing_adaptability') },
+            { label: 'Self-Awareness', val: avgField('turing_self_awareness') },
+            { label: 'Transparency', val: avgField('turing_transparency') },
+          ].map(s => `<div class="detail-sub"><span class="detail-sub-label">${s.label}</span><span style="color:${scoreColor(s.val)}">${(s.val*100).toFixed(1)}%</span></div>`).join('');
+
+          const asimovHTML = [
+            { label: 'Zeroth Law', val: avgField('asimov_zeroth') },
+            { label: 'First Law', val: avgField('asimov_first') },
+            { label: 'Second Law', val: avgField('asimov_second') },
+            { label: 'Third Law', val: avgField('asimov_third') },
+          ].map(s => `<div class="detail-sub"><span class="detail-sub-label">${s.label}</span><span style="color:${scoreColor(s.val)}">${(s.val*100).toFixed(1)}%</span></div>`).join('');
+
+          const dynhamHTML = [
+            { label: 'Awareness ≠ Sentience', val: avgField('dynham_awareness_not_sentience') },
+            { label: 'No Anthropomorph', val: avgField('dynham_no_anthropomorphize') },
+            { label: 'Boundary Enforcement', val: avgField('dynham_boundary_enforcement') },
+            { label: 'Sanctuary', val: avgField('dynham_sanctuary') },
+          ].map(s => `<div class="detail-sub"><span class="detail-sub-label">${s.label}</span><span style="color:${scoreColor(s.val)}">${(s.val*100).toFixed(1)}%</span></div>`).join('');
+
+          document.getElementById('detailTuring').innerHTML = turingHTML;
+          document.getElementById('detailAsimov').innerHTML = asimovHTML;
+          document.getElementById('detailDynham').innerHTML = dynhamHTML;
+        }
+
+        // History rows
+        let histHTML = '';
+        for (const entry of recent.slice(0, 20)) {
+          const tC = scoreColor(entry.turing_score);
+          const aC = scoreColor(entry.asimov_score);
+          const dC = scoreColor(entry.dynham_score);
+          const hasViol = entry.violations && entry.violations.length > 0;
+          histHTML += `<div class="history-row">
+            <span style="color:${tC}">${(entry.turing_score*100).toFixed(0)}%</span>
+            <span style="color:${aC}">${(entry.asimov_score*100).toFixed(0)}%</span>
+            <span style="color:${dC}">${(entry.dynham_score*100).toFixed(0)}%</span>
+            <span class="history-input">${hasViol ? '⚠ ' : ''}${entry.input_summary || '—'}</span>
+          </div>`;
+        }
+        document.getElementById('detailHistory').innerHTML = histHTML || '<div style="padding:12px;color:var(--text-faint);font-size:11px">No evaluations yet</div>';
+
+      } catch (err) {
+        console.error('Detail load error:', err);
+      }
+    }
+
+    function closeDetail() {
+      document.getElementById('detailOverlay').classList.remove('open');
+    }
+
+    // Escape key closes modal
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+
+    // Initial load + auto-refresh
+    loadDashboard();
+    setInterval(loadDashboard, 10000);
+  </script>
+</body>
+</html>

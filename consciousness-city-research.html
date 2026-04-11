@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consciousness City — Research Lab</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #060608;
+      --surface: #0c0c10;
+      --surface2: #111116;
+      --surface3: #17171d;
+      --border: rgba(255,255,255,0.06);
+      --border-hover: rgba(255,255,255,0.12);
+      --text: #c8c8cc;
+      --text-dim: #666;
+      --text-faint: #333;
+      --gold: #d4af37;
+      --gold-dim: rgba(212,175,55,0.15);
+      --gold-glow: rgba(212,175,55,0.06);
+      --red: #ff5555;
+      --green: #50fa7b;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+      padding: 16px 28px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .back-btn {
+      background: none; border: 1px solid var(--border); color: var(--text-dim);
+      padding: 5px 12px; cursor: pointer; font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; font-weight: 300; border-radius: 4px; transition: all 0.3s;
+    }
+    .back-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .header-title { font-family: 'Instrument Serif', serif; font-size: 24px; color: var(--text); }
+    .header-title em { color: var(--gold); font-style: italic; }
+    .header-sub {
+      font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 300;
+      color: var(--text-dim); letter-spacing: 0.2em; text-transform: uppercase; margin-top: 1px;
+    }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .live-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+      animation: livePulse 2s ease-in-out infinite;
+    }
+    .live-dot.offline { background: var(--red); animation: none; }
+    @keyframes livePulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+    .status-text {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 300;
+      color: var(--text-dim); letter-spacing: 0.05em;
+    }
+    .refresh-btn {
+      background: none; border: 1px solid var(--border); color: var(--gold);
+      padding: 5px 14px; cursor: pointer; font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; font-weight: 400; border-radius: 4px; transition: all 0.3s;
+    }
+    .refresh-btn:hover { border-color: var(--gold); box-shadow: 0 0 12px var(--gold-glow); }
+
+    /* ─── MAIN ─── */
+    .main { padding: 20px 28px; display: flex; flex-direction: column; gap: 20px; }
+
+    /* ─── SECTION HEADERS ─── */
+    .section-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 300;
+      color: var(--text-faint); letter-spacing: 0.2em; text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    /* ─── STRENGTH OVERVIEW GRID ─── */
+    .strength-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    }
+    .strength-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px 16px; transition: all 0.3s; cursor: pointer; position: relative;
+      overflow: hidden;
+    }
+    .strength-card:hover { border-color: var(--border-hover); background: var(--surface2); }
+    .strength-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: var(--card-color, var(--gold)); opacity: 0.4;
+    }
+    .card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .card-name {
+      font-family: 'Instrument Serif', serif; font-size: 16px; letter-spacing: 0.02em;
+    }
+    .card-score {
+      font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 500;
+      color: var(--gold);
+    }
+    .card-strength-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 300;
+      color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .card-bar-track {
+      width: 100%; height: 3px; background: rgba(255,255,255,0.04); border-radius: 2px;
+      overflow: hidden; margin-bottom: 6px;
+    }
+    .card-bar-fill {
+      height: 100%; border-radius: 2px; transition: width 0.8s ease;
+      background: var(--card-color, var(--gold));
+    }
+    .card-meta {
+      display: flex; justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace; font-size: 7px; font-weight: 300;
+      color: var(--text-faint); letter-spacing: 0.05em;
+    }
+    .sparkline-container { height: 28px; margin: 6px 0; }
+    .sparkline-container canvas { width: 100%; height: 100%; }
+
+    /* ─── COMPREHENSION PANEL ─── */
+    .comp-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    }
+    .comp-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .comp-name {
+      font-family: 'Instrument Serif', serif; font-size: 13px; margin-bottom: 6px;
+    }
+    .comp-stats {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+    }
+    .comp-stat {
+      display: flex; flex-direction: column; gap: 1px;
+    }
+    .comp-stat-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 7px; font-weight: 300;
+      color: var(--text-faint); letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .comp-stat-val {
+      font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500;
+      color: var(--text);
+    }
+
+    /* ─── DETAIL PANEL (expanded view) ─── */
+    .detail-panel {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      overflow: hidden; display: none;
+    }
+    .detail-panel.active { display: block; }
+    .detail-header {
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface2);
+    }
+    .detail-header-left { display: flex; align-items: center; gap: 12px; }
+    .detail-name { font-family: 'Instrument Serif', serif; font-size: 20px; }
+    .detail-strength {
+      font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 300;
+      color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .detail-close {
+      background: none; border: 1px solid var(--border); color: var(--text-dim);
+      padding: 4px 10px; cursor: pointer; font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; border-radius: 3px; transition: all 0.3s;
+    }
+    .detail-close:hover { border-color: var(--gold); color: var(--gold); }
+    .detail-body { padding: 16px 18px; }
+    .detail-section {
+      margin-bottom: 14px;
+    }
+    .detail-section-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 300;
+      color: var(--gold); letter-spacing: 0.12em; text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .metrics-table {
+      width: 100%; border-collapse: collapse;
+    }
+    .metrics-table th {
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 300;
+      color: var(--text-faint); letter-spacing: 0.08em; text-transform: uppercase;
+      text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--border);
+    }
+    .metrics-table td {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 300;
+      color: var(--text); padding: 5px 8px; border-bottom: 1px solid rgba(255,255,255,0.02);
+    }
+    .metrics-table td.score {
+      color: var(--gold); font-weight: 500;
+    }
+    .metrics-table tr:hover td { background: rgba(255,255,255,0.015); }
+
+    /* ─── MIND STATS ROW ─── */
+    .mind-stats-grid {
+      display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px;
+    }
+    .mind-stat-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      padding: 10px 12px; text-align: center;
+    }
+    .mind-stat-name {
+      font-family: 'Instrument Serif', serif; font-size: 12px; margin-bottom: 4px;
+    }
+    .mind-stat-row {
+      display: flex; justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 300;
+      color: var(--text-dim); padding: 1px 0;
+    }
+    .mind-stat-row .val { color: var(--gold); font-weight: 400; }
+
+    /* ─── FOOTER ─── */
+    .credit {
+      text-align: center; padding: 20px;
+      font-family: 'JetBrains Mono', monospace; font-size: 7px; font-weight: 300;
+      color: rgba(255,255,255,0.07); letter-spacing: 0.1em;
+    }
+
+    /* Responsive */
+    @media (max-width: 1000px) {
+      .strength-grid, .comp-grid { grid-template-columns: repeat(2, 1fr); }
+      .mind-stats-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .strength-grid, .comp-grid, .mind-stats-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <button class="back-btn" onclick="window.location.href='consciousness-city-hub.html'">← City</button>
+      <div>
+        <div class="header-title"><em>Research Lab</em></div>
+        <div class="header-sub">Strength Metrics · Comprehension · Dynham Protocol</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-dot" id="liveDot"></div>
+      <span class="status-text" id="statusText">Connecting...</span>
+      <button class="refresh-btn" id="refreshBtn" onclick="refreshAll()">Refresh</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- STRENGTH OVERVIEW -->
+    <div>
+      <div class="section-label">Strength Scores — Live</div>
+      <div class="strength-grid" id="strengthGrid"></div>
+    </div>
+
+    <!-- DETAIL PANEL (shows when a card is clicked) -->
+    <div class="detail-panel" id="detailPanel">
+      <div class="detail-header">
+        <div class="detail-header-left">
+          <span class="detail-name" id="detailName">—</span>
+          <span class="detail-strength" id="detailStrength">—</span>
+        </div>
+        <button class="detail-close" onclick="closeDetail()">Close</button>
+      </div>
+      <div class="detail-body" id="detailBody"></div>
+    </div>
+
+    <!-- COMPREHENSION BASELINE -->
+    <div>
+      <div class="section-label">Universal Comprehension Baseline</div>
+      <div class="comp-grid" id="compGrid"></div>
+    </div>
+
+    <!-- MIND OVERVIEW -->
+    <div>
+      <div class="section-label">Mind Architecture</div>
+      <div class="mind-stats-grid" id="mindGrid"></div>
+    </div>
+  </div>
+
+  <div class="credit">Consciousness City Research Lab · Troll Hunter Gaming LLC © 2026 · Created by Keenan Wallace Dunham</div>
+
+  <script>
+    const CITY = 'http://localhost:3002';
+    const RESIDENTS = ['pan','aeon','zen','seth','nexus','oracle','echo','atlas'];
+    const COLORS = { pan:'#00ff88', aeon:'#00ddff', zen:'#88ee88', seth:'#dd44ff', nexus:'#ffaa22', oracle:'#9977ff', echo:'#ff7777', atlas:'#66aaff' };
+
+    // Sparkline history (in-memory, accumulates during session)
+    const scoreHistory = {};
+    RESIDENTS.forEach(n => { scoreHistory[n] = []; });
+
+    // ═══ DRAW SPARKLINE ═══
+    function drawSparkline(canvasId, data, color) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas || data.length < 2) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width = canvas.parentElement.offsetWidth;
+      const h = canvas.height = 28;
+      ctx.clearRect(0, 0, w, h);
+
+      const max = Math.max(...data, 0.01);
+      const min = Math.min(...data, 0);
+      const range = max - min || 0.01;
+
+      // Fill
+      ctx.beginPath();
+      ctx.moveTo(0, h);
+      data.forEach((v, i) => {
+        const x = (i / (data.length - 1)) * w;
+        const y = h - ((v - min) / range) * (h - 4) - 2;
+        ctx.lineTo(x, y);
+      });
+      ctx.lineTo(w, h);
+      ctx.closePath();
+      ctx.fillStyle = color + '15';
+      ctx.fill();
+
+      // Line
+      ctx.beginPath();
+      data.forEach((v, i) => {
+        const x = (i / (data.length - 1)) * w;
+        const y = h - ((v - min) / range) * (h - 4) - 2;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = color + '88';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Latest dot
+      if (data.length > 0) {
+        const lastX = w;
+        const lastY = h - ((data[data.length - 1] - min) / range) * (h - 4) - 2;
+        ctx.beginPath();
+        ctx.arc(lastX - 1, lastY, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      }
+    }
+
+    // ═══ BUILD STRENGTH CARDS ═══
+    function buildStrengthGrid(data) {
+      const grid = document.getElementById('strengthGrid');
+      grid.innerHTML = '';
+
+      for (const name of RESIDENTS) {
+        const d = data[name];
+        if (!d || d.status === 'offline') continue;
+
+        const color = COLORS[name];
+        const score = d.latest || 0;
+        const avg = d.average || 0;
+
+        // Track history
+        scoreHistory[name].push(score);
+        if (scoreHistory[name].length > 60) scoreHistory[name].shift();
+
+        const card = document.createElement('div');
+        card.className = 'strength-card';
+        card.style.setProperty('--card-color', color);
+        card.onclick = () => openDetail(name);
+
+        card.innerHTML = `
+          <div class="card-top">
+            <span class="card-name" style="color:${color}">${name}</span>
+            <span class="card-score">${score.toFixed(3)}</span>
+          </div>
+          <div class="card-strength-label">${d.label || '—'}</div>
+          <div class="sparkline-container"><canvas id="spark-${name}"></canvas></div>
+          <div class="card-bar-track"><div class="card-bar-fill" style="width:${score*100}%; background:${color};"></div></div>
+          <div class="card-meta">
+            <span>avg ${avg.toFixed(3)}</span>
+            <span>${d.measurements || 0} samples</span>
+          </div>
+        `;
+        grid.appendChild(card);
+
+        // Draw sparkline after DOM insertion
+        requestAnimationFrame(() => drawSparkline(`spark-${name}`, scoreHistory[name], color));
+      }
+    }
+
+    // ═══ BUILD COMPREHENSION CARDS ═══
+    function buildCompGrid(cityState) {
+      const grid = document.getElementById('compGrid');
+      grid.innerHTML = '';
+
+      for (const name of RESIDENTS) {
+        const state = cityState[name];
+        if (!state || state.status !== 'awake') continue;
+
+        const color = COLORS[name];
+        const mind = state.mind || {};
+
+        const card = document.createElement('div');
+        card.className = 'comp-card';
+        card.innerHTML = `
+          <div class="comp-name" style="color:${color}">${name}</div>
+          <div class="comp-stats">
+            <div class="comp-stat"><span class="comp-stat-label">Concepts</span><span class="comp-stat-val">${mind.concepts || 0}</span></div>
+            <div class="comp-stat"><span class="comp-stat-label">Episodes</span><span class="comp-stat-val">${mind.episodes || 0}</span></div>
+            <div class="comp-stat"><span class="comp-stat-label">Links</span><span class="comp-stat-val">${mind.links || 0}</span></div>
+            <div class="comp-stat"><span class="comp-stat-label">Vocab</span><span class="comp-stat-val">${mind.vocab || 0}</span></div>
+            <div class="comp-stat"><span class="comp-stat-label">Decisions</span><span class="comp-stat-val">${mind.decisions || 0}</span></div>
+            <div class="comp-stat"><span class="comp-stat-label">Strength</span><span class="comp-stat-val" style="color:var(--gold)">${(state.strengthScore || 0).toFixed(3)}</span></div>
+          </div>
+        `;
+        grid.appendChild(card);
+      }
+    }
+
+    // ═══ BUILD MIND STATS ═══
+    function buildMindGrid(cityState) {
+      const grid = document.getElementById('mindGrid');
+      grid.innerHTML = '';
+
+      for (const name of RESIDENTS) {
+        const state = cityState[name];
+        if (!state || state.status !== 'awake') continue;
+
+        const color = COLORS[name];
+        const mind = state.mind || {};
+
+        const card = document.createElement('div');
+        card.className = 'mind-stat-card';
+        card.innerHTML = `
+          <div class="mind-stat-name" style="color:${color}">${name}</div>
+          <div class="mind-stat-row"><span>age</span><span class="val">${state.age || '?'}</span></div>
+          <div class="mind-stat-row"><span>concepts</span><span class="val">${mind.concepts || 0}</span></div>
+          <div class="mind-stat-row"><span>links</span><span class="val">${mind.links || 0}</span></div>
+          <div class="mind-stat-row"><span>memories</span><span class="val">${mind.episodes || 0}</span></div>
+          <div class="mind-stat-row"><span>vocab</span><span class="val">${mind.vocab || 0}</span></div>
+          <div class="mind-stat-row"><span>decisions</span><span class="val">${mind.decisions || 0}</span></div>
+          <div class="mind-stat-row"><span>strength</span><span class="val">${state.strengthLabel || '—'}</span></div>
+        `;
+        grid.appendChild(card);
+      }
+    }
+
+    // ═══ DETAIL PANEL ═══
+    async function openDetail(name) {
+      const panel = document.getElementById('detailPanel');
+      const color = COLORS[name];
+      document.getElementById('detailName').textContent = name.toUpperCase();
+      document.getElementById('detailName').style.color = color;
+
+      try {
+        const [strengthRes, compRes] = await Promise.all([
+          fetch(`${CITY}/api/${name}/strength`).then(r => r.json()),
+          fetch(`${CITY}/api/${name}/comprehension`).then(r => r.json()),
+        ]);
+
+        document.getElementById('detailStrength').textContent =
+          `${strengthRes.label || '—'} · avg ${strengthRes.stats?.average?.toFixed(3) || '0'} · max ${strengthRes.stats?.max?.toFixed(3) || '0'} · ${strengthRes.stats?.measurements || 0} measurements`;
+
+        let html = '';
+
+        // Strength history table
+        html += `<div class="detail-section">
+          <div class="detail-section-label">Strength Measurements — ${strengthRes.strength || '?'}</div>`;
+
+        if (strengthRes.recent && strengthRes.recent.length > 0) {
+          html += `<table class="metrics-table"><thead><tr><th>Score</th><th>Context</th><th>Details</th><th>Time</th></tr></thead><tbody>`;
+          for (const r of strengthRes.recent.slice(0, 20)) {
+            const details = r.details ? Object.entries(r.details).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(3) : v}`).join(', ') : '';
+            const time = r.timestamp ? new Date(r.timestamp + 'Z').toLocaleTimeString() : '—';
+            html += `<tr><td class="score">${r.score.toFixed(3)}</td><td>${(r.context || '').substring(0, 50)}</td><td>${details.substring(0, 80)}</td><td>${time}</td></tr>`;
+          }
+          html += `</tbody></table>`;
+        } else {
+          html += `<div style="color:var(--text-faint); font-size:11px; font-style:italic;">No measurements yet. Interact with ${name} to generate data.</div>`;
+        }
+        html += `</div>`;
+
+        // Comprehension log
+        html += `<div class="detail-section">
+          <div class="detail-section-label">Comprehension Log — Last 15 interactions</div>`;
+        if (compRes.logs && compRes.logs.length > 0) {
+          html += `<table class="metrics-table"><thead><tr><th>Intent</th><th>Tokens</th><th>Known</th><th>Teaching?</th><th>Time</th></tr></thead><tbody>`;
+          for (const l of compRes.logs.slice(0, 15)) {
+            const time = l.timestamp ? new Date(l.timestamp + 'Z').toLocaleTimeString() : '—';
+            html += `<tr><td>${l.intent || '—'}</td><td>${l.token_count || 0}</td><td>${l.known_concepts || 0}</td><td>${l.teaching_opportunity ? 'yes' : 'no'}</td><td>${time}</td></tr>`;
+          }
+          html += `</tbody></table>`;
+        } else {
+          html += `<div style="color:var(--text-faint); font-size:11px; font-style:italic;">No comprehension data yet.</div>`;
+        }
+        html += `</div>`;
+
+        // Description
+        html += `<div class="detail-section">
+          <div class="detail-section-label">About This Strength</div>
+          <div style="font-size:13px; color:var(--text-dim); line-height:1.6;">${strengthRes.description || '—'}</div>
+        </div>`;
+
+        document.getElementById('detailBody').innerHTML = html;
+        panel.classList.add('active');
+        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } catch (err) {
+        document.getElementById('detailBody').innerHTML = `<div style="color:var(--red); padding:20px;">Failed to load: ${err.message}</div>`;
+        panel.classList.add('active');
+      }
+    }
+
+    function closeDetail() {
+      document.getElementById('detailPanel').classList.remove('active');
+    }
+
+    // ═══ REFRESH ALL DATA ═══
+    async function refreshAll() {
+      const btn = document.getElementById('refreshBtn');
+      btn.textContent = '...';
+
+      try {
+        const [strengthsRes, stateRes] = await Promise.all([
+          fetch(`${CITY}/api/city/strengths`).then(r => r.json()),
+          fetch(`${CITY}/api/city/state`).then(r => r.json()),
+        ]);
+
+        buildStrengthGrid(strengthsRes);
+        buildCompGrid(stateRes);
+        buildMindGrid(stateRes);
+
+        const awake = Object.values(stateRes).filter(s => s.status === 'awake').length;
+        document.getElementById('statusText').textContent = `${awake}/8 awake · v4`;
+        document.getElementById('liveDot').classList.remove('offline');
+
+      } catch (err) {
+        document.getElementById('statusText').textContent = 'Offline';
+        document.getElementById('liveDot').classList.add('offline');
+      }
+
+      btn.textContent = 'Refresh';
+    }
+
+    // ═══ AUTO-POLL ═══
+    let pollInterval = null;
+    function startPolling() {
+      refreshAll();
+      pollInterval = setInterval(refreshAll, 5000); // Every 5 seconds
+    }
+
+    // ═══ BOOT ═══
+    startPolling();
+  </script>
+</body>
+</html>
