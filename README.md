@@ -170,7 +170,7 @@ Each mind's SQLite database is its entire identity. Delete the database, the min
 ### Install
 
 ```bash
-git clone https://github.com/trollhuntergaming/pan-birth.git
+git clone https://github.com/trllhntrgmgco/pan-birth.git
 cd pan-birth
 npm install
 ```
