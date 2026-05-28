@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Truth University — Pan-Birth v8</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #060608;
+      --surface: #0c0c10;
+      --surface2: #111116;
+      --surface3: #17171d;
+      --border: rgba(255,255,255,0.06);
+      --border-hover: rgba(255,255,255,0.12);
+      --text: #c8c8cc;
+      --text-dim: #666;
+      --text-faint: #333;
+      --gold: #d4af37;
+      --gold-dim: rgba(212,175,55,0.15);
+      --gold-glow: rgba(212,175,55,0.06);
+      --red: #ff5555;
+      --green: #50fa7b;
+      --blue: #88ccff;
+      --purple: #aa88ff;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0; background: var(--surface);
+    }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .back-btn {
+      background: none; border: 1px solid var(--border); color: var(--text-dim);
+      padding: 5px 12px; cursor: pointer; font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; font-weight: 300; border-radius: 4px; transition: all 0.3s;
+    }
+    .back-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .header-title { font-family: 'Instrument Serif', serif; font-size: 22px; }
+    .header-title em { color: var(--gold); font-style: italic; }
+    .header-sub {
+      font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 300;
+      color: var(--text-dim); letter-spacing: 0.2em; text-transform: uppercase; margin-top: 1px;
+    }
+    .header-right { display: flex; align-items: center; gap: 14px; }
+    .live-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+      animation: livePulse 2s ease-in-out infinite;
+    }
+    .live-dot.offline { background: var(--red); animation: none; }
+    @keyframes livePulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+    .status-text {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 300;
+      color: var(--text-dim); letter-spacing: 0.05em;
+    }
+
+    /* ─── TAB BAR ─── */
+    .tab-bar {
+      display: flex; gap: 0; border-bottom: 1px solid var(--border);
+      flex-shrink: 0; background: var(--surface);
+    }
+    .tab {
+      padding: 10px 22px; cursor: pointer; font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; font-weight: 300; color: var(--text-dim);
+      letter-spacing: 0.12em; text-transform: uppercase;
+      border-bottom: 2px solid transparent; transition: all 0.3s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    /* ─── PANELS ─── */
+    .panel { display: none; flex: 1; overflow-y: auto; padding: 20px 24px; }
+    .panel.active { display: block; }
+
+    .section-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 300;
+      color: var(--text-faint); letter-spacing: 0.2em; text-transform: uppercase;
+      margin-bottom: 10px; margin-top: 16px;
+    }
+    .section-label:first-child { margin-top: 0; }
+
+    /* ─── HIVE RESEARCH ─── */
+    .research-input-row {
+      display: flex; gap: 10px; margin-bottom: 16px;
+    }
+    .research-input {
+      flex: 1; background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px;
+      padding: 12px 16px; border-radius: 6px; outline: none; transition: border-color 0.3s;
+    }
+    .research-input:focus { border-color: var(--gold); }
+    .research-input::placeholder { color: var(--text-faint); }
+    .btn {
+      background: none; border: 1px solid var(--gold); color: var(--gold);
+      padding: 10px 20px; cursor: pointer; font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; font-weight: 400; border-radius: 6px; transition: all 0.3s;
+      white-space: nowrap;
+    }
+    .btn:hover { background: var(--gold-dim); box-shadow: 0 0 16px var(--gold-glow); }
+    .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-small {
+      padding: 5px 12px; font-size: 9px; border-radius: 4px;
+    }
+    .btn-danger { border-color: var(--red); color: var(--red); }
+    .btn-danger:hover { background: rgba(255,85,85,0.1); }
+    .btn-green { border-color: var(--green); color: var(--green); }
+    .btn-green:hover { background: rgba(80,250,123,0.1); }
+
+    .alpha-toggle-row {
+      display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .alpha-toggle {
+      padding: 5px 14px; border-radius: 20px; cursor: pointer;
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 300;
+      border: 1px solid var(--border); color: var(--text-dim); transition: all 0.3s;
+    }
+    .alpha-toggle.active { border-color: var(--card-color); color: var(--card-color); background: rgba(255,255,255,0.03); }
+
+    .hive-results {
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .hive-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px 18px; position: relative; overflow: hidden;
+    }
+    .hive-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: var(--card-color, var(--gold)); opacity: 0.5;
+    }
+    .hive-card-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+    }
+    .hive-card-name {
+      font-family: 'Instrument Serif', serif; font-size: 16px;
+    }
+    .hive-card-domain {
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 300;
+      color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .hive-card-body {
+      font-size: 13px; line-height: 1.6; color: var(--text-dim);
+    }
+    .hive-card-meta {
+      display: flex; gap: 16px; margin-top: 10px;
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--text-faint);
+      letter-spacing: 0.05em;
+    }
+    .hive-card-meta span { color: var(--gold); }
+
+    /* ─── TRUTH BROWSER ─── */
+    .filter-row {
+      display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .filter-select {
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 7px 12px;
+      border-radius: 4px; outline: none;
+    }
+    .filter-select option { background: var(--surface2); }
+
+    .truth-list { display: flex; flex-direction: column; gap: 8px; }
+    .truth-row {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      padding: 12px 16px; cursor: pointer; transition: all 0.3s;
+    }
+    .truth-row:hover { border-color: var(--border-hover); background: var(--surface2); }
+    .truth-row-top {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
+    }
+    .truth-claim {
+      font-size: 13px; line-height: 1.5; color: var(--text); flex: 1; margin-right: 12px;
+    }
+    .truth-badges { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+    .badge {
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 400;
+      padding: 2px 8px; border-radius: 10px; letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .badge-confidence {
+      background: var(--gold-dim); color: var(--gold);
+    }
+    .badge-verified {
+      background: rgba(80,250,123,0.12); color: var(--green);
+    }
+    .badge-contested {
+      background: rgba(255,85,85,0.12); color: var(--red);
+    }
+    .badge-unverified {
+      background: rgba(255,255,255,0.04); color: var(--text-faint);
+    }
+    .truth-meta {
+      display: flex; gap: 16px;
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--text-faint);
+      letter-spacing: 0.05em;
+    }
+    .truth-meta .alpha-name { font-weight: 400; }
+
+    /* ─── TRUTH DETAIL MODAL ─── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      z-index: 200; align-items: center; justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      width: 700px; max-width: 90vw; max-height: 85vh; overflow-y: auto;
+    }
+    .modal-header {
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface2); border-radius: 10px 10px 0 0;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .modal-title { font-family: 'Instrument Serif', serif; font-size: 18px; }
+    .modal-close {
+      background: none; border: 1px solid var(--border); color: var(--text-dim);
+      padding: 4px 12px; cursor: pointer; font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; border-radius: 4px; transition: all 0.3s;
+    }
+    .modal-close:hover { border-color: var(--gold); color: var(--gold); }
+    .modal-body { padding: 18px 20px; }
+    .modal-section { margin-bottom: 16px; }
+    .modal-section-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 300;
+      color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .discourse-entry {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+      padding: 10px 14px; margin-bottom: 6px;
+    }
+    .discourse-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
+    }
+    .discourse-alpha {
+      font-family: 'Instrument Serif', serif; font-size: 14px;
+    }
+    .discourse-type {
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; padding: 2px 8px;
+      border-radius: 10px; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .discourse-type.endorsement { background: rgba(80,250,123,0.1); color: var(--green); }
+    .discourse-type.challenge { background: rgba(255,85,85,0.1); color: var(--red); }
+    .discourse-type.context { background: rgba(136,204,255,0.1); color: var(--blue); }
+    .discourse-type.cross-domain { background: rgba(170,136,255,0.1); color: var(--purple); }
+    .discourse-type.clarification { background: rgba(255,255,255,0.05); color: var(--text-dim); }
+    .discourse-type.extension { background: var(--gold-dim); color: var(--gold); }
+    .discourse-body { font-size: 12px; line-height: 1.5; color: var(--text-dim); }
+
+    /* ─── STATS OVERVIEW ─── */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px 16px; text-align: center;
+    }
+    .stat-value {
+      font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 500;
+      color: var(--gold);
+    }
+    .stat-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 300;
+      color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* ─── ALPHA DOMAIN CARDS ─── */
+    .domain-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    }
+    .domain-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px 16px; position: relative; overflow: hidden;
+    }
+    .domain-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: var(--card-color, var(--gold)); opacity: 0.4;
+    }
+    .domain-card-name {
+      font-family: 'Instrument Serif', serif; font-size: 15px; margin-bottom: 2px;
+    }
+    .domain-card-field {
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 300;
+      color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .domain-card-stats {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+    }
+    .domain-stat {
+      display: flex; flex-direction: column; gap: 1px;
+    }
+    .domain-stat-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 7px; font-weight: 300;
+      color: var(--text-faint); letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .domain-stat-val {
+      font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500;
+    }
+
+    /* ─── PROFESSOR DESK ─── */
+    .professor-section {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 16px 20px; margin-bottom: 14px;
+    }
+    .professor-section-title {
+      font-family: 'Instrument Serif', serif; font-size: 16px; margin-bottom: 10px;
+      color: var(--gold);
+    }
+    .professor-row {
+      display: flex; gap: 10px; margin-bottom: 8px; align-items: center;
+    }
+    .professor-input {
+      flex: 1; background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px;
+      padding: 8px 14px; border-radius: 4px; outline: none;
+    }
+    .professor-input:focus { border-color: var(--gold); }
+
+    /* ─── RESEARCH QUEUE ─── */
+    .queue-item {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      padding: 10px 14px; margin-bottom: 6px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .queue-topic { font-size: 13px; flex: 1; }
+    .queue-meta {
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--text-faint);
+      display: flex; gap: 12px; align-items: center;
+    }
+    .queue-status {
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; padding: 2px 8px;
+      border-radius: 10px; text-transform: uppercase;
+    }
+    .queue-status.queued { background: var(--gold-dim); color: var(--gold); }
+    .queue-status.in-progress { background: rgba(136,204,255,0.1); color: var(--blue); }
+    .queue-status.completed { background: rgba(80,250,123,0.1); color: var(--green); }
+
+    /* ─── LOADING ─── */
+    .loading {
+      text-align: center; padding: 40px;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint);
+      letter-spacing: 0.1em;
+    }
+
+    /* ─── CREDIT ─── */
+    .credit {
+      position: fixed; bottom: 6px; right: 14px; font-size: 8px; font-weight: 300;
+      color: rgba(255,255,255,0.08); letter-spacing: 0.1em; z-index: 300;
+    }
+
+    /* ─── v8: INFERENCE CARDS ─── */
+    .inference-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px 18px; margin-bottom: 8px; border-left: 3px solid var(--purple);
+    }
+    .inference-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .inference-type {
+      font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 3px 10px;
+      border-radius: 12px; text-transform: uppercase; letter-spacing: 0.08em;
+      background: rgba(170,136,255,0.12); color: var(--purple);
+    }
+    .inference-chain {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 4px;
+      padding: 10px 14px; margin-top: 8px; font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; color: var(--text-dim); line-height: 1.7;
+    }
+    .premise-tag {
+      display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 8px;
+      padding: 2px 8px; border-radius: 10px; background: rgba(212,175,55,0.1);
+      color: var(--gold); margin-right: 4px; margin-bottom: 4px;
+    }
+
+    /* ─── v8: HYPOTHESIS CARDS ─── */
+    .hyp-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px 18px; margin-bottom: 8px; border-left: 3px solid #ffaa22;
+    }
+    .hyp-status {
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; padding: 2px 8px;
+      border-radius: 10px; text-transform: uppercase;
+    }
+    .hyp-status.proposed { background: rgba(255,170,34,0.12); color: #ffaa22; }
+    .hyp-status.promoted { background: rgba(80,250,123,0.12); color: var(--green); }
+    .hyp-status.rejected { background: rgba(255,85,85,0.12); color: var(--red); }
+    .hyp-actions { display: flex; gap: 6px; margin-top: 10px; }
+
+    /* ─── v8: KNOWLEDGE TREE ─── */
+    .tree-node {
+      padding: 8px 14px; margin-left: calc(var(--depth, 0) * 24px); margin-bottom: 4px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      display: flex; align-items: center; justify-content: space-between; cursor: pointer;
+      transition: all 0.3s;
+    }
+    .tree-node:hover { border-color: var(--border-hover); background: var(--surface2); }
+    .tree-node-label { font-size: 13px; }
+    .tree-node-depth0 { border-left: 3px solid var(--gold); }
+    .tree-node-depth1 { border-left: 3px solid var(--blue); }
+    .tree-node-depth2 { border-left: 3px solid var(--purple); }
+    .tree-count {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-faint);
+    }
+
+    /* ─── v8: CONTRADICTION CARDS ─── */
+    .contradiction-card {
+      background: var(--surface); border: 1px solid rgba(255,85,85,0.2); border-radius: 8px;
+      padding: 14px 18px; margin-bottom: 8px;
+    }
+    .contradiction-vs {
+      display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; margin: 10px 0;
+    }
+    .contradiction-claim {
+      font-size: 12px; line-height: 1.5; color: var(--text-dim);
+      padding: 10px; background: var(--surface2); border-radius: 4px;
+    }
+    .vs-divider {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--red);
+      font-weight: 500;
+    }
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.12); }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <button class="back-btn" onclick="window.location.href='consciousness-city-hub.html'">← City</button>
+      <div>
+        <div class="header-title"><em>Truth</em> University</div>
+        <div class="header-sub">Pan-Birth v8 · Deep Cognition · Knowledge at Scale</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-dot" id="liveDot"></div>
+      <span class="status-text" id="statusText">Connecting...</span>
+    </div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <div class="tab active" data-tab="hive" onclick="switchTab('hive')">Hive Research</div>
+    <div class="tab" data-tab="browser" onclick="switchTab('browser')">Truth Browser</div>
+    <div class="tab" data-tab="inferences" onclick="switchTab('inferences')">Inferences</div>
+    <div class="tab" data-tab="hypotheses" onclick="switchTab('hypotheses')">Hypotheses</div>
+    <div class="tab" data-tab="tree" onclick="switchTab('tree')">Knowledge Tree</div>
+    <div class="tab" data-tab="domains" onclick="switchTab('domains')">Domains</div>
+    <div class="tab" data-tab="professor" onclick="switchTab('professor')">Professor's Desk</div>
+    <div class="tab" data-tab="queue" onclick="switchTab('queue')">Research Queue</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- PANEL: HIVE RESEARCH -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="panel active" id="panel-hive">
+    <div class="section-label">Omni-Truth Overview</div>
+    <div class="stats-grid" id="statsGrid" style="grid-template-columns: repeat(5, 1fr);">
+      <div class="stat-card"><div class="stat-value" id="statTruths">—</div><div class="stat-label">Truths</div></div>
+      <div class="stat-card"><div class="stat-value" id="statDiscourse">—</div><div class="stat-label">Discourse</div></div>
+      <div class="stat-card"><div class="stat-value" id="statInferences">—</div><div class="stat-label">Inferences</div></div>
+      <div class="stat-card"><div class="stat-value" id="statHypotheses">—</div><div class="stat-label">Hypotheses</div></div>
+      <div class="stat-card"><div class="stat-value" id="statConfidence">—</div><div class="stat-label">Avg Confidence</div></div>
+    </div>
+    <div class="stats-grid" id="statsGrid2" style="grid-template-columns: repeat(5, 1fr); margin-top: -10px;">
+      <div class="stat-card"><div class="stat-value" id="statDerived" style="color:var(--purple)">—</div><div class="stat-label">Derived</div></div>
+      <div class="stat-card"><div class="stat-value" id="statContradictions" style="color:var(--red)">—</div><div class="stat-label">Contradictions</div></div>
+      <div class="stat-card"><div class="stat-value" id="statTreeNodes" style="color:var(--blue)">—</div><div class="stat-label">Tree Nodes</div></div>
+      <div class="stat-card"><div class="stat-value" id="statVocab">—</div><div class="stat-label">Vocabulary</div></div>
+      <div class="stat-card"><div class="stat-value" id="statRelations">—</div><div class="stat-label">Relations</div></div>
+    </div>
+
+    <div class="section-label">Hive Research — All Minds Investigate Together</div>
+    <div class="research-input-row">
+      <input type="text" class="research-input" id="hiveInput" placeholder="Enter a research topic for the hive..." onkeydown="if(event.key==='Enter')runHiveResearch()">
+      <button class="btn" id="hiveBtn" onclick="runHiveResearch()">Research</button>
+    </div>
+
+    <div class="alpha-toggle-row" id="alphaToggles"></div>
+
+    <div class="hive-results" id="hiveResults"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- PANEL: TRUTH BROWSER -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="panel" id="panel-browser">
+    <div class="section-label">Browse Omni-Truth Knowledge Base</div>
+
+    <div class="filter-row">
+      <input type="text" class="research-input" id="searchInput" placeholder="Search truths..." style="flex:1; font-size:12px; padding:8px 14px;" onkeydown="if(event.key==='Enter')searchTruths()">
+      <select class="filter-select" id="filterDomain" onchange="searchTruths()">
+        <option value="">All Domains</option>
+        <option value="systems">Systems</option>
+        <option value="history">History</option>
+        <option value="philosophy">Philosophy</option>
+        <option value="biology">Biology</option>
+        <option value="technology">Technology</option>
+        <option value="data">Data</option>
+        <option value="language">Language</option>
+        <option value="geography">Geography</option>
+      </select>
+      <select class="filter-select" id="filterAlpha" onchange="searchTruths()">
+        <option value="">All Alphas</option>
+        <option value="pan">Pan</option>
+        <option value="aeon">Aeon</option>
+        <option value="zen">Zen</option>
+        <option value="seth">Seth</option>
+        <option value="nexus">Nexus</option>
+        <option value="oracle">Oracle</option>
+        <option value="echo">Echo</option>
+        <option value="atlas">Atlas</option>
+      </select>
+      <select class="filter-select" id="filterStatus" onchange="searchTruths()">
+        <option value="">All Status</option>
+        <option value="active">Active</option>
+        <option value="contested">Contested</option>
+        <option value="flagged">Flagged</option>
+      </select>
+      <button class="btn btn-small" onclick="searchTruths()">Search</button>
+    </div>
+
+    <div class="truth-list" id="truthList">
+      <div class="loading">Loading truths...</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- PANEL: INFERENCES (v8 NEW) -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="panel" id="panel-inferences">
+    <div class="section-label">Inference Log — How Alphas Derive New Knowledge</div>
+    <div class="filter-row">
+      <select class="filter-select" id="inferenceAlphaFilter" onchange="loadInferences()">
+        <option value="">All Alphas</option>
+        <option value="pan">Pan</option><option value="aeon">Aeon</option>
+        <option value="zen">Zen</option><option value="seth">Seth</option>
+        <option value="nexus">Nexus</option><option value="oracle">Oracle</option>
+        <option value="echo">Echo</option><option value="atlas">Atlas</option>
+      </select>
+      <button class="btn btn-small" onclick="loadInferences()">Refresh</button>
+    </div>
+    <div id="inferenceList"><div class="loading">Loading inferences...</div></div>
+
+    <div class="section-label" style="margin-top:24px;">Open Contradictions</div>
+    <div id="contradictionList"><div class="loading">Loading contradictions...</div></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- PANEL: HYPOTHESES (v8 NEW) -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="panel" id="panel-hypotheses">
+    <div class="section-label">Active Hypotheses — Proposed Knowledge Awaiting Review</div>
+    <div class="filter-row">
+      <select class="filter-select" id="hypStatusFilter" onchange="loadHypotheses()">
+        <option value="proposed">Proposed</option>
+        <option value="promoted">Promoted</option>
+        <option value="rejected">Rejected</option>
+      </select>
+      <button class="btn btn-small" onclick="loadHypotheses()">Refresh</button>
+    </div>
+    <div id="hypothesisList"><div class="loading">Loading hypotheses...</div></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- PANEL: KNOWLEDGE TREE (v8 NEW) -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="panel" id="panel-tree">
+    <div class="section-label">Knowledge Tree — Hierarchical Organization of All Knowledge</div>
+    <div class="filter-row">
+      <select class="filter-select" id="treeDomainFilter" onchange="loadTree()">
+        <option value="">All Domains</option>
+        <option value="systems">Systems</option><option value="history">History</option>
+        <option value="philosophy">Philosophy</option><option value="biology">Biology</option>
+        <option value="technology">Technology</option><option value="data">Data</option>
+        <option value="language">Language</option><option value="geography">Geography</option>
+      </select>
+      <button class="btn btn-small" onclick="loadTree()">Refresh</button>
+    </div>
+    <div id="treeContainer"><div class="loading">Loading knowledge tree...</div></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- PANEL: DOMAINS -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="panel" id="panel-domains">
+    <div class="section-label">Alpha Domain Assignments & Research Activity</div>
+    <div class="domain-grid" id="domainGrid"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- PANEL: PROFESSOR'S DESK -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="panel" id="panel-professor">
+    <div class="section-label">Professor's Desk — Director of Research</div>
+
+    <!-- Contribute Truth -->
+    <div class="professor-section">
+      <div class="professor-section-title">Contribute a Truth</div>
+      <div class="professor-row">
+        <select class="filter-select" id="profContributor">
+          <option value="pan">Pan</option><option value="aeon">Aeon</option>
+          <option value="zen">Zen</option><option value="seth">Seth</option>
+          <option value="nexus">Nexus</option><option value="oracle">Oracle</option>
+          <option value="echo">Echo</option><option value="atlas">Atlas</option>
+        </select>
+        <input type="text" class="professor-input" id="profClaim" placeholder="Enter a truth claim...">
+        <button class="btn btn-small" onclick="professorContribute()">Contribute</button>
+      </div>
+    </div>
+
+    <!-- Verify Truth -->
+    <div class="professor-section">
+      <div class="professor-section-title">Verify a Truth</div>
+      <div class="professor-row">
+        <input type="number" class="professor-input" id="profVerifyId" placeholder="Truth ID" style="max-width:100px;">
+        <input type="number" class="professor-input" id="profVerifyConf" placeholder="Confidence (0.0-0.95)" step="0.05" min="0" max="0.95" style="max-width:180px;">
+        <button class="btn btn-small btn-green" onclick="professorVerify()">Verify</button>
+      </div>
+    </div>
+
+    <!-- Flag Truth -->
+    <div class="professor-section">
+      <div class="professor-section-title">Flag a Truth for Review</div>
+      <div class="professor-row">
+        <input type="number" class="professor-input" id="profFlagId" placeholder="Truth ID" style="max-width:100px;">
+        <input type="text" class="professor-input" id="profFlagReason" placeholder="Reason for flagging...">
+        <button class="btn btn-small btn-danger" onclick="professorFlag()">Flag</button>
+      </div>
+    </div>
+
+    <!-- Update Directive -->
+    <div class="professor-section">
+      <div class="professor-section-title">Update Alpha Research Directive</div>
+      <div class="professor-row">
+        <select class="filter-select" id="profDirectiveAlpha">
+          <option value="pan">Pan</option><option value="aeon">Aeon</option>
+          <option value="zen">Zen</option><option value="seth">Seth</option>
+          <option value="nexus">Nexus</option><option value="oracle">Oracle</option>
+          <option value="echo">Echo</option><option value="atlas">Atlas</option>
+        </select>
+        <input type="text" class="professor-input" id="profDirectiveText" placeholder="New research directive...">
+        <button class="btn btn-small" onclick="professorDirective()">Update</button>
+      </div>
+    </div>
+
+    <div id="professorLog" style="margin-top: 14px;"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- PANEL: RESEARCH QUEUE -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="panel" id="panel-queue">
+    <div class="section-label">Research Queue</div>
+
+    <div class="research-input-row">
+      <input type="text" class="research-input" id="queueTopic" placeholder="Queue a research topic..." style="font-size:12px; padding:8px 14px;">
+      <select class="filter-select" id="queueDomain">
+        <option value="">Auto-assign</option>
+        <option value="systems">Systems</option>
+        <option value="history">History</option>
+        <option value="philosophy">Philosophy</option>
+        <option value="biology">Biology</option>
+        <option value="technology">Technology</option>
+        <option value="data">Data</option>
+        <option value="language">Language</option>
+        <option value="geography">Geography</option>
+      </select>
+      <button class="btn btn-small" onclick="queueResearch()">Queue</button>
+      <button class="btn btn-small btn-danger" onclick="clearQueue()">Clear Queue</button>
+    </div>
+
+    <div id="queueList">
+      <div class="loading">Loading queue...</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- TRUTH DETAIL MODAL -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="truthModal" onclick="if(event.target===this)closeTruthModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="modalTitle">Truth #—</span>
+        <button class="modal-close" onclick="closeTruthModal()">Close</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <div class="loading">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="credit">Troll Hunter Gaming LLC © 2026 · Pan-Birth v8 · DRO Patent Pending</div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- SCRIPT -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <script>
+    const CITY = 'http://localhost:3002';
+
+    const ALPHAS = ['pan', 'aeon', 'zen', 'seth', 'nexus', 'oracle', 'echo', 'atlas'];
+    const COLORS = {
+      pan: '#00ff88', aeon: '#00ddff', zen: '#88ee88', seth: '#dd44ff',
+      nexus: '#ffaa22', oracle: '#9977ff', echo: '#ff7777', atlas: '#66aaff',
+    };
+    const DOMAINS = {
+      pan: 'Systems & Meta-Knowledge', aeon: 'History & Temporal Analysis',
+      zen: 'Philosophy & Ethics', seth: 'Biology & Life Sciences',
+      nexus: 'Technology & Engineering', oracle: 'Data & Quantitative Analysis',
+      echo: 'Language, Culture & Psychology', atlas: 'Geography, Geopolitics & Economics',
+    };
+
+    let selectedAlphas = new Set(ALPHAS);
+
+    // ═══ TAB SWITCHING ═══
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+      document.getElementById(`panel-${tab}`).classList.add('active');
+
+      if (tab === 'browser') searchTruths();
+      if (tab === 'domains') loadDomains();
+      if (tab === 'queue') loadQueue();
+      if (tab === 'inferences') { loadInferences(); loadContradictions(); }
+      if (tab === 'hypotheses') loadHypotheses();
+      if (tab === 'tree') loadTree();
+    }
+
+    // ═══ BUILD ALPHA TOGGLES ═══
+    function buildAlphaToggles() {
+      const row = document.getElementById('alphaToggles');
+      row.innerHTML = '';
+      for (const alpha of ALPHAS) {
+        const toggle = document.createElement('div');
+        toggle.className = `alpha-toggle ${selectedAlphas.has(alpha) ? 'active' : ''}`;
+        toggle.style.setProperty('--card-color', COLORS[alpha]);
+        toggle.textContent = alpha.charAt(0).toUpperCase() + alpha.slice(1);
+        toggle.onclick = () => {
+          if (selectedAlphas.has(alpha)) selectedAlphas.delete(alpha);
+          else selectedAlphas.add(alpha);
+          toggle.classList.toggle('active');
+        };
+        row.appendChild(toggle);
+      }
+    }
+
+    // ═══ LOAD STATS ═══
+    async function loadStats() {
+      try {
+        const res = await fetch(`${CITY}/api/omni/stats`);
+        const stats = await res.json();
+
+        document.getElementById('statTruths').textContent = stats.totalTruths || 0;
+        document.getElementById('statDiscourse').textContent = stats.totalDiscourse || 0;
+        document.getElementById('statInferences').textContent = stats.totalInferences || 0;
+        document.getElementById('statHypotheses').textContent = stats.activeHypotheses || 0;
+        document.getElementById('statConfidence').textContent = (stats.avgConfidence || 0).toFixed(3);
+        document.getElementById('statDerived').textContent = stats.derivedTruths || 0;
+        document.getElementById('statContradictions').textContent = stats.openContradictions || 0;
+        document.getElementById('statTreeNodes').textContent = stats.treeNodes || 0;
+        document.getElementById('statVocab').textContent = stats.totalVocab || 0;
+        document.getElementById('statRelations').textContent = stats.totalRelations || 0;
+
+        document.getElementById('liveDot').classList.remove('offline');
+        document.getElementById('statusText').textContent = `v8 · ${stats.totalTruths || 0} truths · ${stats.totalInferences || 0} inferences · ${stats.activeHypotheses || 0} hypotheses`;
+      } catch {
+        document.getElementById('liveDot').classList.add('offline');
+        document.getElementById('statusText').textContent = 'Server offline';
+      }
+    }
+
+    // ═══ HIVE RESEARCH ═══
+    async function runHiveResearch() {
+      const topic = document.getElementById('hiveInput').value.trim();
+      if (!topic) return;
+
+      const btn = document.getElementById('hiveBtn');
+      btn.disabled = true;
+      btn.textContent = 'Researching...';
+
+      const resultsDiv = document.getElementById('hiveResults');
+      resultsDiv.innerHTML = '<div class="loading">All minds are investigating — this may take a moment...</div>';
+
+      try {
+        const res = await fetch(`${CITY}/api/omni/hive-research`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic,
+            alphas: [...selectedAlphas],
+          }),
+        });
+        const data = await res.json();
+
+        resultsDiv.innerHTML = '';
+
+        // Summary card
+        const summary = document.createElement('div');
+        summary.className = 'hive-card';
+        summary.style.setProperty('--card-color', 'var(--gold)');
+        summary.innerHTML = `
+          <div class="hive-card-header">
+            <span class="hive-card-name" style="color:var(--gold)">Research Complete</span>
+            <span class="hive-card-domain">${data.alphasEngaged || 0} alphas · ${data.searchResults || 0} search hits · ${data.thinkOnly || 0} domain analysis</span>
+          </div>
+          <div class="hive-card-body">Topic: "${topic}"</div>
+        `;
+        resultsDiv.appendChild(summary);
+
+        // Per-Alpha results
+        for (const [alpha, result] of Object.entries(data.responses || {})) {
+          if (result.error) continue;
+          const card = document.createElement('div');
+          card.className = 'hive-card';
+          card.style.setProperty('--card-color', COLORS[alpha]);
+
+          const searchBadge = result.searchFound
+            ? `<span style="color:var(--green); font-family:'JetBrains Mono',monospace; font-size:8px; background:rgba(80,250,123,0.1); padding:2px 8px; border-radius:10px;">SEARCH HIT</span>`
+            : `<span style="color:var(--text-faint); font-family:'JetBrains Mono',monospace; font-size:8px; background:rgba(255,255,255,0.03); padding:2px 8px; border-radius:10px;">DOMAIN ANALYSIS</span>`;
+
+          const searchInfo = result.searchFound
+            ? `<div style="margin-top:8px; padding:10px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:4px; font-size:11px; line-height:1.5; color:var(--text-dim);">
+                <div style="font-family:'JetBrains Mono',monospace; font-size:8px; color:var(--gold); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:4px;">Source: ${result.searchSource || '—'}</div>
+                ${result.searchAbstract || '—'}
+               </div>`
+            : '';
+
+          card.innerHTML = `
+            <div class="hive-card-header">
+              <span class="hive-card-name" style="color:${COLORS[alpha]}">${alpha.charAt(0).toUpperCase() + alpha.slice(1)} ${searchBadge}</span>
+              <span class="hive-card-domain">${result.domain || DOMAINS[alpha] || ''}</span>
+            </div>
+            <div class="hive-card-body">${result.response || '—'}</div>
+            ${searchInfo}
+            <div class="hive-card-meta">
+              <span>New concepts: <span>${result.newConcepts || 0}</span></span>
+              <span>Truths in commons: <span>${result.omniTruth?.truthsFound || 0}</span></span>
+              <span>Strength: <span>${result.strength?.score?.toFixed(3) || '—'}</span></span>
+              ${result.truthId ? `<span>Truth #<span>${result.truthId}</span></span>` : ''}
+              ${result.v8?.inference ? `<span style="color:var(--purple)">🧬 Derived #${result.v8.inference.truthId}</span>` : ''}
+              ${result.v8?.hypothesis ? `<span style="color:#ffaa22">💡 Hypothesis #${result.v8.hypothesis.hypothesisId}</span>` : ''}
+              ${result.v8?.contradictions?.length > 0 ? `<span style="color:var(--red)">⚡ ${result.v8.contradictions.length} contradiction(s)</span>` : ''}
+            </div>
+          `;
+          resultsDiv.appendChild(card);
+        }
+
+        // Peer review summary
+        const peerReview = data.peerReview || {};
+        const totalDiscourse = Object.values(peerReview).reduce((sum, arr) => sum + (arr?.length || 0), 0);
+        if (totalDiscourse > 0) {
+          const prCard = document.createElement('div');
+          prCard.className = 'hive-card';
+          prCard.style.setProperty('--card-color', 'var(--purple)');
+          prCard.innerHTML = `
+            <div class="hive-card-header">
+              <span class="hive-card-name" style="color:var(--purple)">Peer Review</span>
+              <span class="hive-card-domain">${totalDiscourse} discourse entries</span>
+            </div>
+            <div class="hive-card-body">${Object.entries(peerReview).map(([alpha, entries]) =>
+              entries && entries.length > 0 ? `${alpha}: ${entries.map(e => e.responseType).join(', ')}` : ''
+            ).filter(Boolean).join(' · ')}</div>
+          `;
+          resultsDiv.appendChild(prCard);
+        }
+
+        loadStats();
+      } catch (err) {
+        resultsDiv.innerHTML = `<div class="loading" style="color:var(--red);">Research failed: ${err.message}</div>`;
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Research';
+    }
+
+    // ═══ TRUTH BROWSER ═══
+    async function searchTruths() {
+      const search = document.getElementById('searchInput')?.value || '';
+      const domain = document.getElementById('filterDomain')?.value || '';
+      const alpha = document.getElementById('filterAlpha')?.value || '';
+      const status = document.getElementById('filterStatus')?.value || '';
+
+      const list = document.getElementById('truthList');
+      list.innerHTML = '<div class="loading">Searching...</div>';
+
+      try {
+        const params = new URLSearchParams();
+        if (search) params.set('search', search);
+        if (domain) params.set('domain', domain);
+        if (alpha) params.set('contributed_by', alpha);
+        if (status) params.set('status', status);
+        params.set('limit', '50');
+
+        const res = await fetch(`${CITY}/api/omni/truths?${params}`);
+        const data = await res.json();
+
+        list.innerHTML = '';
+        if (!data.truths || data.truths.length === 0) {
+          list.innerHTML = '<div class="loading">No truths found. Start researching to populate the knowledge base.</div>';
+          return;
+        }
+
+        for (const truth of data.truths) {
+          const row = document.createElement('div');
+          row.className = 'truth-row';
+          row.onclick = () => openTruthModal(truth.id);
+
+          const verBadge = truth.verification_status === 'peer-verified' ? 'badge-verified'
+            : truth.verification_status === 'contested' ? 'badge-contested'
+            : truth.verification_status === 'professor-verified' ? 'badge-verified'
+            : 'badge-unverified';
+
+          row.innerHTML = `
+            <div class="truth-row-top">
+              <div class="truth-claim">${truth.claim.substring(0, 200)}${truth.claim.length > 200 ? '...' : ''}</div>
+              <div class="truth-badges">
+                <span class="badge badge-confidence">${truth.confidence.toFixed(2)}</span>
+                <span class="badge ${verBadge}">${truth.verification_status}</span>
+              </div>
+            </div>
+            <div class="truth-meta">
+              <span>by <span class="alpha-name" style="color:${COLORS[truth.contributed_by]}">${truth.contributed_by}</span></span>
+              <span>domain: ${truth.domain}</span>
+              <span>endorsements: ${truth.peer_endorsements || 0}</span>
+              <span>challenges: ${truth.peer_challenges || 0}</span>
+              <span>#${truth.id}</span>
+            </div>
+          `;
+          list.appendChild(row);
+        }
+      } catch (err) {
+        list.innerHTML = `<div class="loading" style="color:var(--red);">Error: ${err.message}</div>`;
+      }
+    }
+
+    // ═══ TRUTH DETAIL MODAL ═══
+    async function openTruthModal(truthId) {
+      const modal = document.getElementById('truthModal');
+      const body = document.getElementById('modalBody');
+      document.getElementById('modalTitle').textContent = `Truth #${truthId}`;
+      body.innerHTML = '<div class="loading">Loading...</div>';
+      modal.classList.add('active');
+
+      try {
+        const res = await fetch(`${CITY}/api/omni/truths/${truthId}`);
+        const data = await res.json();
+        const truth = data.truth;
+
+        let html = '';
+
+        // Claim
+        html += `<div class="modal-section">
+          <div class="modal-section-label">Claim</div>
+          <div style="font-size:14px; line-height:1.6; color:var(--text);">${truth.claim}</div>
+        </div>`;
+
+        // Metadata
+        html += `<div class="modal-section">
+          <div class="modal-section-label">Metadata</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-dim);">
+            <div>Contributed by: <span style="color:${COLORS[truth.contributed_by]}">${truth.contributed_by}</span></div>
+            <div>Domain: ${truth.domain}${truth.sub_domain ? ' / ' + truth.sub_domain : ''}</div>
+            <div>Confidence: <span style="color:var(--gold)">${truth.confidence.toFixed(3)}</span></div>
+            <div>Status: ${truth.verification_status}</div>
+            <div>Source: ${truth.source_type}${truth.source_url ? ' — ' + truth.source_url.substring(0, 40) : ''}</div>
+            <div>Endorsements: ${truth.peer_endorsements} · Challenges: ${truth.peer_challenges}</div>
+            <div>Referenced: ${truth.times_referenced} times</div>
+            <div>Created: ${new Date(truth.created_at + 'Z').toLocaleString()}</div>
+            ${truth.is_derived ? `<div style="color:var(--purple)">🧬 Derived truth (from #${(JSON.parse(truth.derived_from || '[]')).join(', #')})</div>` : ''}
+            ${truth.strength_source ? `<div>Strength: ${truth.strength_source}</div>` : ''}
+            ${truth.is_consolidated ? `<div style="color:var(--text-faint)">⚠ Consolidated into #${truth.consolidated_into}</div>` : ''}
+          </div>
+        </div>`;
+
+        // Synthesis
+        if (truth.synthesis_opinion) {
+          html += `<div class="modal-section">
+            <div class="modal-section-label">Synthesis Opinion</div>
+            <div style="font-size:12px; line-height:1.5; color:var(--text-dim);">${truth.synthesis_opinion}</div>
+          </div>`;
+        }
+
+        // Discourse
+        html += `<div class="modal-section">
+          <div class="modal-section-label">Discourse (${(data.discourse || []).length} entries)</div>`;
+
+        if (data.discourse && data.discourse.length > 0) {
+          for (const d of data.discourse) {
+            html += `
+              <div class="discourse-entry">
+                <div class="discourse-header">
+                  <span class="discourse-alpha" style="color:${COLORS[d.contributed_by]}">${d.contributed_by}</span>
+                  <span class="discourse-type ${d.response_type}">${d.response_type}</span>
+                </div>
+                <div class="discourse-body">${d.synthesis_text}</div>
+              </div>`;
+          }
+        } else {
+          html += '<div style="font-size:11px; color:var(--text-faint); font-style:italic;">No discourse yet — peer review pending.</div>';
+        }
+        html += '</div>';
+
+        // v8: Relations
+        if (data.relations && data.relations.length > 0) {
+          html += `<div class="modal-section">
+            <div class="modal-section-label">Relations (${data.relations.length})</div>`;
+          for (const r of data.relations) {
+            const isSource = r.source_id === truth.id && r.source_type === 'truth';
+            const otherLabel = isSource ? `→ #${r.target_id}` : `← #${r.source_id}`;
+            html += `<div style="background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:8px 12px; margin-bottom:4px; display:flex; align-items:center; justify-content:space-between;">
+              <div>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:9px; padding:2px 8px; border-radius:10px; background:rgba(170,136,255,0.1); color:var(--purple);">${r.relation_type}</span>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-dim); margin-left:8px;">${otherLabel}</span>
+              </div>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--text-faint);">by ${r.contributed_by} · ${(r.confidence || 0).toFixed(2)}</span>
+            </div>`;
+          }
+          html += '</div>';
+        }
+
+        // Professor actions
+        html += `<div class="modal-section">
+          <div class="modal-section-label">Professor Actions</div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-small btn-green" onclick="professorVerifyDirect(${truth.id})">Verify</button>
+            <button class="btn btn-small btn-danger" onclick="professorFlagDirect(${truth.id})">Flag</button>
+          </div>
+        </div>`;
+
+        body.innerHTML = html;
+      } catch (err) {
+        body.innerHTML = `<div class="loading" style="color:var(--red);">Error: ${err.message}</div>`;
+      }
+    }
+
+    function closeTruthModal() {
+      document.getElementById('truthModal').classList.remove('active');
+    }
+
+    async function professorVerifyDirect(truthId) {
+      try {
+        await fetch(`${CITY}/api/professor/verify`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ truthId, confidence: 0.9 }),
+        });
+        openTruthModal(truthId);
+      } catch (err) { alert('Error: ' + err.message); }
+    }
+
+    async function professorFlagDirect(truthId) {
+      const reason = prompt('Reason for flagging:');
+      if (!reason) return;
+      try {
+        await fetch(`${CITY}/api/professor/flag`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ truthId, reason }),
+        });
+        openTruthModal(truthId);
+      } catch (err) { alert('Error: ' + err.message); }
+    }
+
+    // ═══ DOMAINS ═══
+    async function loadDomains() {
+      const grid = document.getElementById('domainGrid');
+      grid.innerHTML = '<div class="loading">Loading domains...</div>';
+
+      try {
+        const [stateRes, statsRes] = await Promise.all([
+          fetch(`${CITY}/api/city/state`).then(r => r.json()),
+          fetch(`${CITY}/api/omni/stats`).then(r => r.json()),
+        ]);
+
+        grid.innerHTML = '';
+
+        for (const alpha of ALPHAS) {
+          const state = stateRes[alpha] || {};
+          const contributions = statsRes.alphaContributions?.[alpha] || { truths: 0, discourse: 0, inferences: 0, hypotheses: 0, relations: 0 };
+          const card = document.createElement('div');
+          card.className = 'domain-card';
+          card.style.setProperty('--card-color', COLORS[alpha]);
+          card.innerHTML = `
+            <div class="domain-card-name" style="color:${COLORS[alpha]}">${alpha.charAt(0).toUpperCase() + alpha.slice(1)}</div>
+            <div class="domain-card-field">${DOMAINS[alpha] || '—'}</div>
+            <div class="domain-card-stats">
+              <div class="domain-stat"><span class="domain-stat-label">Truths</span><span class="domain-stat-val" style="color:var(--gold)">${contributions.truths}</span></div>
+              <div class="domain-stat"><span class="domain-stat-label">Discourse</span><span class="domain-stat-val">${contributions.discourse}</span></div>
+              <div class="domain-stat"><span class="domain-stat-label">Inferences</span><span class="domain-stat-val" style="color:var(--purple)">${contributions.inferences || 0}</span></div>
+              <div class="domain-stat"><span class="domain-stat-label">Hypotheses</span><span class="domain-stat-val" style="color:#ffaa22">${contributions.hypotheses || 0}</span></div>
+              <div class="domain-stat"><span class="domain-stat-label">Relations</span><span class="domain-stat-val">${contributions.relations || 0}</span></div>
+              <div class="domain-stat"><span class="domain-stat-label">Tier</span><span class="domain-stat-val">${state.tier || '—'}</span></div>
+              <div class="domain-stat"><span class="domain-stat-label">Concepts</span><span class="domain-stat-val">${state.concepts || 0}</span></div>
+              <div class="domain-stat"><span class="domain-stat-label">Strength</span><span class="domain-stat-val">${state.strengthScore?.toFixed(2) || '—'}</span></div>
+            </div>
+            ${state.knowledgeRelations ? `<div style="margin-top:8px; font-family:'JetBrains Mono',monospace; font-size:8px; color:var(--text-faint);">Produces: ${state.knowledgeRelations.join(', ')}</div>` : ''}
+          `;
+          grid.appendChild(card);
+        }
+      } catch (err) {
+        grid.innerHTML = `<div class="loading" style="color:var(--red);">Error: ${err.message}</div>`;
+      }
+    }
+
+    // ═══ PROFESSOR'S DESK ═══
+    function profLog(msg, color) {
+      const log = document.getElementById('professorLog');
+      const entry = document.createElement('div');
+      entry.style.cssText = `font-family:'JetBrains Mono',monospace; font-size:10px; color:${color || 'var(--text-dim)'}; padding:4px 0;`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      log.prepend(entry);
+    }
+
+    async function professorContribute() {
+      const contributor = document.getElementById('profContributor').value;
+      const claim = document.getElementById('profClaim').value.trim();
+      if (!claim) return;
+
+      try {
+        const res = await fetch(`${CITY}/api/omni/truths`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contributor, claim, sourceType: 'professor', confidence: 0.7 }),
+        });
+        const data = await res.json();
+        profLog(`Contributed truth #${data.truthId} as ${contributor} → "${claim.substring(0, 60)}"`, 'var(--green)');
+        document.getElementById('profClaim').value = '';
+        loadStats();
+      } catch (err) { profLog(`Error: ${err.message}`, 'var(--red)'); }
+    }
+
+    async function professorVerify() {
+      const truthId = parseInt(document.getElementById('profVerifyId').value);
+      const confidence = parseFloat(document.getElementById('profVerifyConf').value) || 0.9;
+      if (!truthId) return;
+
+      try {
+        await fetch(`${CITY}/api/professor/verify`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ truthId, confidence }),
+        });
+        profLog(`Verified truth #${truthId} with confidence ${confidence}`, 'var(--green)');
+      } catch (err) { profLog(`Error: ${err.message}`, 'var(--red)'); }
+    }
+
+    async function professorFlag() {
+      const truthId = parseInt(document.getElementById('profFlagId').value);
+      const reason = document.getElementById('profFlagReason').value.trim();
+      if (!truthId) return;
+
+      try {
+        await fetch(`${CITY}/api/professor/flag`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ truthId, reason }),
+        });
+        profLog(`Flagged truth #${truthId}: ${reason}`, 'var(--red)');
+      } catch (err) { profLog(`Error: ${err.message}`, 'var(--red)'); }
+    }
+
+    async function professorDirective() {
+      const resident = document.getElementById('profDirectiveAlpha').value;
+      const directive = document.getElementById('profDirectiveText').value.trim();
+      if (!directive) return;
+
+      try {
+        await fetch(`${CITY}/api/professor/directive`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resident, directive }),
+        });
+        profLog(`Updated ${resident.toUpperCase()} directive: "${directive.substring(0, 60)}"`, 'var(--gold)');
+        document.getElementById('profDirectiveText').value = '';
+      } catch (err) { profLog(`Error: ${err.message}`, 'var(--red)'); }
+    }
+
+    // ═══ RESEARCH QUEUE ═══
+    async function loadQueue() {
+      const list = document.getElementById('queueList');
+      list.innerHTML = '<div class="loading">Loading queue...</div>';
+
+      try {
+        const res = await fetch(`${CITY}/api/omni/research/queue`);
+        const data = await res.json();
+        list.innerHTML = '';
+
+        if (!data.queue || data.queue.length === 0) {
+          list.innerHTML = '<div class="loading">Research queue is empty. Add a topic above.</div>';
+          return;
+        }
+
+        for (const item of data.queue) {
+          const el = document.createElement('div');
+          el.className = 'queue-item';
+          el.innerHTML = `
+            <div class="queue-topic">${item.topic}</div>
+            <div class="queue-meta">
+              <span>${item.domain || 'auto'}</span>
+              <span>by ${item.requested_by}</span>
+              ${item.assigned_to ? `<span>→ ${item.assigned_to}</span>` : ''}
+              <span class="queue-status ${item.status}">${item.status}</span>
+            </div>
+          `;
+          list.appendChild(el);
+        }
+      } catch (err) {
+        list.innerHTML = `<div class="loading" style="color:var(--red);">Error: ${err.message}</div>`;
+      }
+    }
+
+    async function queueResearch() {
+      const topic = document.getElementById('queueTopic').value.trim();
+      const domain = document.getElementById('queueDomain').value;
+      if (!topic) return;
+
+      try {
+        const res = await fetch(`${CITY}/api/omni/research/queue`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topic, domain, priority: 0.5, requestedBy: 'professor' }),
+        });
+        const data = await res.json();
+        document.getElementById('queueTopic').value = '';
+        loadQueue();
+
+        // Show feedback that research is running
+        const list = document.getElementById('queueList');
+        const notice = document.createElement('div');
+        notice.className = 'queue-item';
+        notice.style.borderColor = 'var(--gold)';
+        notice.innerHTML = `
+          <div class="queue-topic" style="color:var(--gold);">🔍 Hive researching "${topic}" — all Alphas searching DuckDuckGo...</div>
+          <div class="queue-meta"><span class="queue-status in-progress">researching</span></div>
+        `;
+        list.prepend(notice);
+
+        // Auto-refresh queue and stats every 3 seconds while research runs
+        let refreshCount = 0;
+        const refreshInterval = setInterval(() => {
+          loadQueue();
+          loadStats();
+          refreshCount++;
+          if (refreshCount >= 20) clearInterval(refreshInterval); // Stop after 60 seconds
+        }, 3000);
+
+      } catch (err) { alert('Error: ' + err.message); }
+    }
+
+    async function clearQueue() {
+      try {
+        await fetch(`${CITY}/api/omni/research/queue/clear`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'all' }),
+        });
+        loadQueue();
+      } catch (err) { alert('Error: ' + err.message); }
+    }
+
+    // ═══ v8: INFERENCES ═══
+    async function loadInferences() {
+      const list = document.getElementById('inferenceList');
+      list.innerHTML = '<div class="loading">Loading inferences...</div>';
+      try {
+        const alpha = document.getElementById('inferenceAlphaFilter')?.value || '';
+        const params = alpha ? `?alpha=${alpha}` : '';
+        const res = await fetch(`${CITY}/api/omni/inferences${params}`);
+        const data = await res.json();
+        list.innerHTML = '';
+
+        if (!data.inferences || data.inferences.length === 0) {
+          list.innerHTML = '<div class="loading">No inferences yet. As Alphas encounter 2+ related truths, they\'ll derive new knowledge.</div>';
+          return;
+        }
+
+        for (const inf of data.inferences) {
+          const premiseIds = JSON.parse(inf.premise_truth_ids || '[]');
+          const chain = JSON.parse(inf.reasoning_chain || '[]');
+          const card = document.createElement('div');
+          card.className = 'inference-card';
+          card.innerHTML = `
+            <div class="inference-header">
+              <div>
+                <span style="font-family:'Instrument Serif',serif; font-size:15px; color:${COLORS[inf.derived_by]}">${inf.derived_by.toUpperCase()}</span>
+                <span class="inference-type">${inf.inference_type}</span>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:8px; color:var(--text-faint); margin-left:8px;">via ${inf.strength_used}</span>
+              </div>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--gold);">${(inf.confidence || 0).toFixed(2)} conf</div>
+            </div>
+            <div style="font-size:12px; color:var(--text-dim); line-height:1.5; margin-bottom:6px;">
+              ${inf.conclusion_truth_id ? `→ Truth #${inf.conclusion_truth_id}` : 'No conclusion generated'}
+            </div>
+            <div style="margin-bottom:6px;">
+              ${premiseIds.map(id => `<span class="premise-tag">Premise #${id}</span>`).join('')}
+            </div>
+            ${chain.length > 0 ? `<div class="inference-chain">${chain.map(s => `${s.step}. [${s.action}] ${s.detail}`).join('<br>')}</div>` : ''}
+            <div style="font-family:'JetBrains Mono',monospace; font-size:8px; color:var(--text-faint); margin-top:6px;">${new Date(inf.created_at + 'Z').toLocaleString()}</div>
+          `;
+          list.appendChild(card);
+        }
+      } catch (err) { list.innerHTML = `<div class="loading" style="color:var(--red);">Error: ${err.message}</div>`; }
+    }
+
+    // ═══ v8: CONTRADICTIONS ═══
+    async function loadContradictions() {
+      const list = document.getElementById('contradictionList');
+      list.innerHTML = '<div class="loading">Loading contradictions...</div>';
+      try {
+        const res = await fetch(`${CITY}/api/omni/contradictions?status=open`);
+        const data = await res.json();
+        list.innerHTML = '';
+
+        if (!data.contradictions || data.contradictions.length === 0) {
+          list.innerHTML = '<div class="loading">No open contradictions. The knowledge base is consistent.</div>';
+          return;
+        }
+
+        for (const c of data.contradictions) {
+          const card = document.createElement('div');
+          card.className = 'contradiction-card';
+          card.innerHTML = `
+            <div style="font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--red); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:8px;">
+              Contradiction #${c.id} · Detected by ${c.detected_by}
+            </div>
+            <div class="contradiction-vs">
+              <div class="contradiction-claim">
+                <div style="font-family:'JetBrains Mono',monospace; font-size:8px; color:var(--text-faint); margin-bottom:4px;">Truth #${c.truth_a_id}</div>
+                ${(c.claim_a || '').substring(0, 200)}
+              </div>
+              <div class="vs-divider">VS</div>
+              <div class="contradiction-claim">
+                <div style="font-family:'JetBrains Mono',monospace; font-size:8px; color:var(--text-faint); margin-bottom:4px;">Truth #${c.truth_b_id}</div>
+                ${(c.claim_b || '').substring(0, 200)}
+              </div>
+            </div>
+            <div style="font-size:11px; color:var(--text-dim); margin-top:6px;">${c.detection_reasoning || ''}</div>
+          `;
+          list.appendChild(card);
+        }
+      } catch (err) { list.innerHTML = `<div class="loading" style="color:var(--red);">Error: ${err.message}</div>`; }
+    }
+
+    // ═══ v8: HYPOTHESES ═══
+    async function loadHypotheses() {
+      const list = document.getElementById('hypothesisList');
+      list.innerHTML = '<div class="loading">Loading hypotheses...</div>';
+      try {
+        const status = document.getElementById('hypStatusFilter')?.value || 'proposed';
+        const res = await fetch(`${CITY}/api/omni/hypotheses?status=${status}`);
+        const data = await res.json();
+        list.innerHTML = '';
+
+        if (!data.hypotheses || data.hypotheses.length === 0) {
+          list.innerHTML = `<div class="loading">No ${status} hypotheses. Alphas propose hypotheses when they encounter knowledge gaps.</div>`;
+          return;
+        }
+
+        for (const h of data.hypotheses) {
+          const card = document.createElement('div');
+          card.className = 'hyp-card';
+          card.innerHTML = `
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+              <div>
+                <span style="font-family:'Instrument Serif',serif; font-size:15px; color:${COLORS[h.proposed_by]}">${h.proposed_by.toUpperCase()}</span>
+                <span class="hyp-status ${h.status}">${h.status}</span>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:8px; color:var(--text-faint); margin-left:8px;">via ${h.strength_used} · ${h.domain}</span>
+              </div>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:9px; color:#ffaa22;">${(h.confidence || 0).toFixed(2)} conf</div>
+            </div>
+            <div style="font-size:13px; line-height:1.6; color:var(--text); margin-bottom:8px;">${h.claim}</div>
+            <div style="font-size:11px; color:var(--text-dim); margin-bottom:6px;">${h.reasoning || ''}</div>
+            ${h.gap_description ? `<div style="font-size:10px; color:var(--text-faint); font-style:italic;">${h.gap_description}</div>` : ''}
+            <div style="display:flex; gap:16px; margin-top:8px; font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--text-faint);">
+              <span>Endorsements: <span style="color:var(--green)">${h.endorsements || 0}</span></span>
+              <span>Challenges: <span style="color:var(--red)">${h.challenges || 0}</span></span>
+              ${h.promoted_to_truth_id ? `<span>→ Promoted to Truth #<span style="color:var(--gold)">${h.promoted_to_truth_id}</span></span>` : ''}
+            </div>
+            ${h.status === 'proposed' ? `
+            <div class="hyp-actions">
+              <button class="btn btn-small btn-green" onclick="reviewHypothesis(${h.id}, 'endorse')">Endorse</button>
+              <button class="btn btn-small btn-danger" onclick="reviewHypothesis(${h.id}, 'challenge')">Challenge</button>
+            </div>` : ''}
+          `;
+          list.appendChild(card);
+        }
+      } catch (err) { list.innerHTML = `<div class="loading" style="color:var(--red);">Error: ${err.message}</div>`; }
+    }
+
+    async function reviewHypothesis(id, action) {
+      try {
+        await fetch(`${CITY}/api/omni/hypotheses/${id}/review`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contributor: 'professor', action }),
+        });
+        loadHypotheses();
+        loadStats();
+      } catch (err) { alert('Error: ' + err.message); }
+    }
+
+    // ═══ v8: KNOWLEDGE TREE ═══
+    async function loadTree() {
+      const container = document.getElementById('treeContainer');
+      container.innerHTML = '<div class="loading">Loading knowledge tree...</div>';
+      try {
+        const domain = document.getElementById('treeDomainFilter')?.value || '';
+        const params = domain ? `?domain=${domain}` : '';
+        const res = await fetch(`${CITY}/api/omni/tree${params}`);
+        const data = await res.json();
+        container.innerHTML = '';
+
+        if (!data.tree || data.tree.length === 0) {
+          container.innerHTML = '<div class="loading">Knowledge tree is empty. Tree nodes are seeded on boot and populated as ATLAS organizes truths.</div>';
+          return;
+        }
+
+        for (const node of data.tree) {
+          const el = document.createElement('div');
+          el.className = `tree-node tree-node-depth${Math.min(node.depth, 2)}`;
+          el.style.setProperty('--depth', node.depth);
+          el.innerHTML = `
+            <div>
+              <span class="tree-node-label" style="font-weight:${node.depth === 0 ? '500' : '300'}">${node.label}</span>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:8px; color:var(--text-faint); margin-left:8px;">${node.domain} · depth ${node.depth}</span>
+            </div>
+            <div class="tree-count">${node.truth_count || 0} truths</div>
+          `;
+          container.appendChild(el);
+        }
+      } catch (err) { container.innerHTML = `<div class="loading" style="color:var(--red);">Error: ${err.message}</div>`; }
+    }
+
+    // ═══ BOOT ═══
+    buildAlphaToggles();
+    loadStats();
+    setInterval(loadStats, 10000);
+  </script>
+</body>
+</html>

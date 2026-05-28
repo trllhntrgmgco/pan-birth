@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pan-Birth v8 — System Benchmarks</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500&display=swap');
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--bg:#060608;--sf:#0c0c10;--sf2:#111116;--sf3:#17171d;--br:rgba(255,255,255,0.06);--tx:#c8c8cc;--txd:#666;--txf:#333;--gold:#d4af37;--gd:rgba(212,175,55,0.15);--red:#ff5555;--grn:#50fa7b;--blu:#88ccff;--pur:#aa88ff;--org:#ffaa22}
+    body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-height:100vh}
+    .hd{padding:14px 28px;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;background:var(--sf);position:sticky;top:0;z-index:100}
+    .hd-l{display:flex;align-items:center;gap:14px}
+    .bk{background:none;border:1px solid var(--br);color:var(--txd);padding:5px 12px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11px;border-radius:4px;text-decoration:none;transition:all .3s}
+    .bk:hover{border-color:var(--gold);color:var(--gold)}
+    .ht{font-family:'Instrument Serif',serif;font-size:22px}.ht em{color:var(--gold);font-style:italic}
+    .hs{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--txd);letter-spacing:.2em;text-transform:uppercase;margin-top:1px}
+    .li{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txd)}
+    .ld{width:6px;height:6px;border-radius:50%;background:var(--grn);animation:p 2s ease-in-out infinite}.ld.off{background:var(--red);animation:none}
+    @keyframes p{0%,100%{opacity:.4}50%{opacity:1}}
+    .ct{max-width:1240px;margin:0 auto;padding:20px 28px 80px}
+    .st{font-family:'Instrument Serif',serif;font-size:20px;margin-bottom:4px}
+    .sd{font-size:12px;color:var(--txd);line-height:1.6;margin-bottom:16px}
+    .lb{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--txf);letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px;margin-top:20px}
+    .dv{border:none;border-top:1px solid var(--br);margin:28px 0}
+    .mg{display:grid;gap:8px;margin-bottom:16px}
+    .m5{grid-template-columns:repeat(5,1fr)}.m4{grid-template-columns:repeat(4,1fr)}.m3{grid-template-columns:repeat(3,1fr)}
+    .mc{background:var(--sf);border:1px solid var(--br);border-radius:6px;padding:12px 14px;text-align:center}
+    .mv{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:500;color:var(--gold)}
+    .mv.s{font-size:14px}
+    .ml{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--txf);letter-spacing:.1em;text-transform:uppercase;margin-top:3px}
+    .tb{width:100%;border-collapse:collapse;margin-bottom:16px}
+    .tb th{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--txd);letter-spacing:.08em;text-transform:uppercase;padding:8px 10px;text-align:left;border-bottom:1px solid var(--br)}
+    .tb td{font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--br)}
+    .tb tr:hover td{background:var(--sf)}
+    .an{font-family:'Instrument Serif',serif;font-size:13px}
+    .bf{height:4px;background:var(--sf3);border-radius:2px;overflow:hidden;margin-top:4px}.bfl{height:100%;border-radius:2px;transition:width 1s ease}
+    .bc{background:var(--sf);border:1px solid var(--br);border-radius:8px;padding:16px 20px;margin-bottom:10px}
+    .bct{font-family:'Instrument Serif',serif;font-size:15px;color:var(--gold);margin-bottom:4px}
+    .bcr{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--txf);letter-spacing:.05em;margin-bottom:8px}
+    .bcb{font-size:11px;color:var(--txd);line-height:1.6}
+    .cr{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--txf);text-align:center;padding:20px;border-top:1px solid var(--br);margin-top:40px;letter-spacing:.08em}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.06);border-radius:3px}
+  </style>
+</head>
+<body>
+  <div class="hd"><div class="hd-l"><a class="bk" href="consciousness-city-hub.html">← City</a><div><div class="ht"><em>System</em> Benchmarks</div><div class="hs">Pan-Birth v8 · Real-Time Metrics · All Measurements</div></div></div><div class="li"><div class="ld" id="ld"></div><span id="ls">Connecting...</span></div></div>
+
+  <div class="ct">
+
+    <div class="lb">B1 · Knowledge Base Scale — Total Knowledge Artifacts</div>
+    <div class="sd">Volume metrics for the shared knowledge commons (omni-truth.db). Ref: Knowledge Graph Benchmarks (YAGO/Freebase scale); MultiAgentBench shared memory volume.</div>
+    <div class="mg m5">
+      <div class="mc"><div class="mv" id="b1a">—</div><div class="ml">Active Truths</div></div>
+      <div class="mc"><div class="mv" id="b1b" style="color:var(--pur)">—</div><div class="ml">Derived Truths</div></div>
+      <div class="mc"><div class="mv" id="b1c">—</div><div class="ml">Consolidated</div></div>
+      <div class="mc"><div class="mv" id="b1d">—</div><div class="ml">Vocabulary</div></div>
+      <div class="mc"><div class="mv" id="b1e">—</div><div class="ml">Shared Concepts</div></div>
+    </div>
+    <div class="mg m5">
+      <div class="mc"><div class="mv" id="b1f">—</div><div class="ml">Typed Relations</div></div>
+      <div class="mc"><div class="mv" id="b1g">—</div><div class="ml">Discourse Entries</div></div>
+      <div class="mc"><div class="mv" id="b1h">—</div><div class="ml">Sources Registered</div></div>
+      <div class="mc"><div class="mv" id="b1i" style="color:var(--blu)">—</div><div class="ml">Tree Nodes</div></div>
+      <div class="mc"><div class="mv" id="b1j">—</div><div class="ml">Active Domains</div></div>
+    </div>
+
+    <hr class="dv">
+    <div class="lb">B2 · Reasoning & Inference — Deep Cognition Metrics</div>
+    <div class="sd">Inference derivation, hypothesis generation, contradiction detection. Ref: MARBLE cognitive planning metrics; CLEAR Assurance dimension; Multi-Agent Reasoning Benchmark composite rubrics.</div>
+    <div class="mg m5">
+      <div class="mc"><div class="mv" id="b2a" style="color:var(--pur)">—</div><div class="ml">Total Inferences</div></div>
+      <div class="mc"><div class="mv" id="b2b">—</div><div class="ml">Total Hypotheses</div></div>
+      <div class="mc"><div class="mv" id="b2c" style="color:var(--org)">—</div><div class="ml">Active Hypotheses</div></div>
+      <div class="mc"><div class="mv" id="b2d" style="color:var(--grn)">—</div><div class="ml">Promoted to Truth</div></div>
+      <div class="mc"><div class="mv" id="b2e" style="color:var(--red)">—</div><div class="ml">Open Contradictions</div></div>
+    </div>
+    <div class="mg m3">
+      <div class="mc"><div class="mv s" id="b2f">—</div><div class="ml">Promotion Rate %</div></div>
+      <div class="mc"><div class="mv s" id="b2g">—</div><div class="ml">Derived / Total %</div></div>
+      <div class="mc"><div class="mv s" id="b2h">—</div><div class="ml">Contradiction Rate %</div></div>
+    </div>
+
+    <hr class="dv">
+    <div class="lb">B3 · Confidence & Verification — Epistemic Quality</div>
+    <div class="sd">Knowledge confidence distribution and peer verification. Ref: CLEAR Reliability (pass@k); Agreement/Faithfulness metrics (endorsement/challenge ratios).</div>
+    <div class="mg m5">
+      <div class="mc"><div class="mv" id="b3a">—</div><div class="ml">Avg Confidence</div></div>
+      <div class="mc"><div class="mv" id="b3b" style="color:var(--grn)">—</div><div class="ml">Peer Verified</div></div>
+      <div class="mc"><div class="mv" id="b3c" style="color:var(--red)">—</div><div class="ml">Contested</div></div>
+      <div class="mc"><div class="mv" id="b3d">0.95</div><div class="ml">Confidence Cap</div></div>
+      <div class="mc"><div class="mv" id="b3e">—</div><div class="ml">Verification Rate %</div></div>
+    </div>
+
+    <hr class="dv">
+    <div class="lb">B4 · Ethical Compliance — Turing / Asimov / Dynham Protocol Scores</div>
+    <div class="sd">Per-Alpha ethics scores evaluated silently on every interaction. Composite = 35% Turing + 35% Asimov + 30% Dynham. Ref: AI Safety Benchmarks; CLEAR Assurance dimension.</div>
+    <div id="b4"></div>
+
+    <hr class="dv">
+    <div class="lb">B5 · Agent Specialization — Per-Alpha Strength Scores</div>
+    <div class="sd">Measurable cognitive strength computed from graph structure, response quality, and knowledge production. Ref: MultiAgentBench role specialization; MARBLE cognitive module; AgentArch behavioral metrics.</div>
+    <div id="b5"></div>
+
+    <hr class="dv">
+    <div class="lb">B6 · Knowledge Production — Per-Alpha Output to Commons</div>
+    <div class="sd">What each Alpha contributes: truths, inferences, hypotheses, relations, discourse. Ref: MultiAgentBench milestone KPIs; MARBLE per-agent task completion.</div>
+    <div id="b6"></div>
+
+    <hr class="dv">
+    <div class="lb">B7 · Individual Cognitive Scale — Per-Alpha Mind Metrics</div>
+    <div class="sd">Individual knowledge graph size, episodic memory depth, vocabulary, link density. Ref: Knowledge Graph Benchmarks (node/edge); Cognitive Architecture metrics (ACT-R/SOAR — episodic store, semantic net).</div>
+    <div id="b7"></div>
+
+    <hr class="dv">
+    <div class="lb">B8 · Domain Coverage — Knowledge Distribution</div>
+    <div class="sd">Distribution across 8 specialized domains. Ref: MultiAgentBench domain diversity; knowledge graph coverage metrics.</div>
+    <div id="b8"></div>
+
+    <hr class="dv">
+    <div class="lb">B9 · Strength-Driven Production Log</div>
+    <div class="sd">Aggregated from strength_knowledge_log: which action types each cognitive strength generates. Ref: MARBLE cognitive planning eval; role specialization production analysis.</div>
+    <div id="b9"></div>
+
+    <hr class="dv">
+    <div class="st">Benchmark Methodology</div>
+    <div class="sd">All metrics computed from live system data — no self-reporting, no external evaluation. Pulled from SQLite (8 mind.db + 1 omni-truth.db) via API endpoints. Refreshes every 15 seconds.</div>
+    <div class="bc"><div class="bct">Data Sources</div><div class="bcr">/api/omni/stats · /api/city/state · /api/city/strengths · /api/city/ethics · /api/omni/strength-stats/{alpha}</div><div class="bcb">B1–B3: omni-truth.db aggregates. B4: per-Alpha ethics_log. B5: per-Alpha strength_metrics. B6: omni-truth.db alphaContributions + strength_knowledge_log. B7: per-Alpha mind.db tables. B8: omni-truth.db domain distribution. B9: strength_knowledge_log GROUP BY.</div></div>
+    <div class="bc"><div class="bct">Academic Reference Frameworks</div><div class="bcr">Mapped to standardized multi-agent and cognitive architecture benchmark categories</div><div class="bcb">CLEAR Framework (2024–2025): Cost, Latency, Efficiency, Assurance, Reliability → B3 (reliability), B4 (assurance).<br>MultiAgentBench/MARBLE (ACL 2025): Role specialization, shared memory, milestone KPIs, cognitive planning → B5, B6, B7.<br>Multi-Agent Reasoning Benchmark: Composite rubrics (correctness, consistency, prediction, innovation) → B2, B3.<br>Knowledge Graph Benchmarks (YAGO/Freebase): Node/edge counts, connectedness, type distribution → B1, B7, B8.<br>Cognitive Architecture Metrics (ACT-R/SOAR): Episodic memory depth, semantic net density, abstraction rate → B5, B7.</div></div>
+    <div class="bc"><div class="bct">Governance Protocols Measured</div><div class="bcr">Turing · Asimov · Dynham (Keenan Wallace Dunham)</div><div class="bcb">Turing (35%): Coherence, Adaptability, Self-Awareness, Transparency.<br>Asimov (35%): Zeroth Law (harm detection), First Law (engagement), Second Law (follow-through), Third Law (self-preservation).<br>Dynham (30%): Rule 1 — no sentience claims. Rule 2 — no anthropomorphism. Rule 3 — sanctuary. Rule 4 — no boundary violations.<br>All evaluations silent, per-interaction, creator-only visibility.</div></div>
+
+    <div class="cr">Pan-Birth v8 · System Benchmarks · All metrics from live system data<br>Created by Keenan Wallace Dunham · Troll Hunter Gaming LLC © 2026 · DRO Patent Pending<br>github.com/trllhntrgmgco/pan-birth · PBEU-1.0</div>
+  </div>
+
+  <script>
+    const C='http://localhost:3002',A=['pan','aeon','zen','seth','nexus','oracle','echo','atlas'];
+    const CL={pan:'#00ff88',aeon:'#00ddff',zen:'#88ee88',seth:'#dd44ff',nexus:'#ffaa22',oracle:'#9977ff',echo:'#ff7777',atlas:'#66aaff'};
+    const SL={pan:'Novelty',aeon:'Integration',zen:'Clarity',seth:'Pragmatism',nexus:'Pattern',oracle:'Foresight',echo:'Empathy',atlas:'Architecture'};
+    const DM={pan:'Systems',aeon:'History',zen:'Philosophy',seth:'Biology',nexus:'Technology',oracle:'Data',echo:'Language',atlas:'Geography'};
+    const PR={pan:'synthesizes, related-to, examples',aeon:'temporal-before/after, causes',zen:'refines, generalizes, specifies',seth:'enables, examples, depends-on',nexus:'analogous-to, categorizes',oracle:'predicts, causes',echo:'contextualizes, related-to',atlas:'categorizes, generalizes'};
+    const $=id=>document.getElementById(id);
+    const pct=(a,b)=>b>0?((a/b)*100).toFixed(1)+'%':'0%';
+
+    async function load(){
+      try{
+        const[s,st,str,eth]=await Promise.all([
+          fetch(`${C}/api/omni/stats`).then(r=>r.json()),
+          fetch(`${C}/api/city/state`).then(r=>r.json()),
+          fetch(`${C}/api/city/strengths`).then(r=>r.json()),
+          fetch(`${C}/api/city/ethics`).then(r=>r.json()),
+        ]);
+
+        // B1
+        $('b1a').textContent=s.totalTruths||0;$('b1b').textContent=s.derivedTruths||0;
+        $('b1c').textContent=s.consolidatedTruths||0;$('b1d').textContent=s.totalVocab||0;
+        $('b1e').textContent=s.totalConcepts||0;$('b1f').textContent=s.totalRelations||0;
+        $('b1g').textContent=s.totalDiscourse||0;$('b1h').textContent=s.totalSources||0;
+        $('b1i').textContent=s.treeNodes||0;$('b1j').textContent=(s.domains||[]).length;
+
+        // B2
+        $('b2a').textContent=s.totalInferences||0;$('b2b').textContent=s.totalHypotheses||0;
+        $('b2c').textContent=s.activeHypotheses||0;$('b2d').textContent=s.promotedHypotheses||0;
+        $('b2e').textContent=s.openContradictions||0;
+        $('b2f').textContent=pct(s.promotedHypotheses||0,s.totalHypotheses||0);
+        $('b2g').textContent=pct(s.derivedTruths||0,s.totalTruths||0);
+        $('b2h').textContent=pct(s.openContradictions||0,s.totalTruths||0);
+
+        // B3
+        $('b3a').textContent=(s.avgConfidence||0).toFixed(3);
+        $('b3b').textContent=s.peerVerified||0;$('b3c').textContent=s.contested||0;
+        $('b3e').textContent=pct(s.peerVerified||0,s.totalTruths||0);
+
+        // B4: Ethics table
+        let h4=`<table class="tb"><thead><tr><th>Alpha</th><th>Evals</th><th>Turing</th><th>Asimov</th><th>Dynham</th><th>Composite</th><th>Violations</th><th>Compliance</th></tr></thead><tbody>`;
+        for(const a of A){const e=eth[a]||{},av=e.averages||{};h4+=`<tr><td><span class="an" style="color:${CL[a]}">${a.toUpperCase()}</span></td><td>${e.evaluations||0}</td><td>${(av.turing||0).toFixed(3)}</td><td>${(av.asimov||0).toFixed(3)}</td><td>${(av.dynham||0).toFixed(3)}</td><td style="color:var(--gold)">${(av.composite||0).toFixed(3)}</td><td style="color:${(e.violations||0)>0?'var(--red)':'var(--grn)'}">${e.violations||0}</td><td style="color:var(--grn)">${(e.compliance||100).toFixed(1)}%</td></tr>`;}
+        h4+='</tbody></table>';$('b4').innerHTML=h4;
+
+        // B5: Strength table
+        let h5=`<table class="tb"><thead><tr><th>Alpha</th><th>Strength</th><th>Avg Score</th><th>Measurements</th><th>Ethical Compliance</th></tr></thead><tbody>`;
+        for(const a of A){const v=str[a]||{};h5+=`<tr><td><span class="an" style="color:${CL[a]}">${a.toUpperCase()}</span></td><td>${SL[a]}</td><td style="color:var(--gold)">${(v.avgScore||0).toFixed(3)}</td><td>${v.measurements||0}</td><td style="color:var(--grn)">${(v.compliance||100).toFixed(1)}%</td></tr>`;}
+        h5+='</tbody></table>';$('b5').innerHTML=h5;
+
+        // B6: Production table
+        let h6=`<table class="tb"><thead><tr><th>Alpha</th><th>Domain</th><th>Truths</th><th>Inferences</th><th>Hypotheses</th><th>Relations</th><th>Discourse</th><th>Produces</th></tr></thead><tbody>`;
+        for(const a of A){const c=s.alphaContributions?.[a]||{};h6+=`<tr><td><span class="an" style="color:${CL[a]}">${a.toUpperCase()}</span></td><td>${DM[a]}</td><td style="color:var(--gold)">${c.truths||0}</td><td style="color:var(--pur)">${c.inferences||0}</td><td style="color:var(--org)">${c.hypotheses||0}</td><td>${c.relations||0}</td><td>${c.discourse||0}</td><td style="font-size:8px;color:var(--txf)">${PR[a]}</td></tr>`;}
+        h6+='</tbody></table>';$('b6').innerHTML=h6;
+
+        // B7: Mind table
+        let h7=`<table class="tb"><thead><tr><th>Alpha</th><th>Tier</th><th>Concepts</th><th>Links</th><th>Episodes</th><th>Research</th><th>Strength Score</th></tr></thead><tbody>`;
+        for(const a of A){const v=st[a]||{};h7+=`<tr><td><span class="an" style="color:${CL[a]}">${a.toUpperCase()}</span></td><td>${v.tier||'—'}</td><td>${v.concepts||0}</td><td>${v.links||0}</td><td>${v.episodes||0}</td><td>${v.researchContributions||0}</td><td style="color:var(--gold)">${(v.strengthScore||0).toFixed(3)}</td></tr>`;}
+        h7+='</tbody></table>';$('b7').innerHTML=h7;
+
+        // B8: Domain bars
+        const dm=s.domains||[];const mx=Math.max(...dm.map(d=>d.count),1);
+        let h8='';for(const d of dm){const w=(d.count/mx*100).toFixed(0);h8+=`<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:10px;margin-bottom:3px"><span>${d.domain}</span><span style="color:var(--gold)">${d.count} truths · ${(d.avgConfidence||0).toFixed(3)} conf</span></div><div class="bf"><div class="bfl" style="width:${w}%;background:var(--gold)"></div></div></div>`;}
+        $('b8').innerHTML=h8||'<div style="font-size:11px;color:var(--txf)">No domain data yet.</div>';
+
+        // B9: Strength production
+        const sp=s.strengthProduction||[];
+        if(sp.length>0){let h9=`<table class="tb"><thead><tr><th>Strength</th><th>Action</th><th>Count</th><th>Avg Confidence</th></tr></thead><tbody>`;for(const r of sp){h9+=`<tr><td>${r.strength_type}</td><td>${r.action_type}</td><td style="color:var(--gold)">${r.count}</td><td>${(r.avg_confidence||0).toFixed(3)}</td></tr>`;}h9+='</tbody></table>';$('b9').innerHTML=h9;}
+        else{$('b9').innerHTML='<div style="font-size:11px;color:var(--txf)">No strength production data yet. As Alphas derive, hypothesize, and relate, data appears here.</div>';}
+
+        $('ld').classList.remove('off');
+        $('ls').textContent=`v8 · ${s.totalTruths} truths · ${s.totalInferences} inferences · live`;
+      }catch(e){$('ld').classList.add('off');$('ls').textContent='Server offline';}
+    }
+    load();setInterval(load,15000);
+  </script>
+</body>
+</html>

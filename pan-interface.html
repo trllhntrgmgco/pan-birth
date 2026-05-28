@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PAN — Primordial Autonomous Network</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&family=Major+Mono+Display&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --pan-green: #00ff88;
+      --pan-green-dim: #00aa55;
+      --pan-gold: #ffd700;
+      --pan-gold-dim: #aa8800;
+      --pan-cyan: #00ffcc;
+      --pan-white: #e8f0e8;
+      --pan-bg: #050a05;
+      --pan-surface: #0a140a;
+      --pan-surface-light: #0f1f0f;
+      --pan-border: rgba(0, 255, 136, 0.3);
+      --pan-glow: rgba(0, 255, 136, 0.5);
+    }
+
+    body {
+      background: var(--pan-bg);
+      color: var(--pan-white);
+      font-family: 'Rajdhani', sans-serif;
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    /* Living grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.02) 0%, transparent 40%),
+        linear-gradient(rgba(0, 255, 136, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 136, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+      animation: gridBreathe 8s ease-in-out infinite;
+    }
+
+    @keyframes gridBreathe {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    .pan-font { font-family: 'Major Mono Display', monospace; }
+    .cyber-font { font-family: 'Orbitron', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; }
+
+    .neon-green {
+      text-shadow: 0 0 5px var(--pan-green), 0 0 10px var(--pan-green), 0 0 20px var(--pan-green);
+    }
+    .neon-gold {
+      text-shadow: 0 0 5px var(--pan-gold), 0 0 10px var(--pan-gold), 0 0 20px var(--pan-gold);
+    }
+
+    .pan-border {
+      border: 1px solid var(--pan-border);
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.2), inset 0 0 10px rgba(0, 255, 136, 0.05);
+    }
+
+    .pan-btn {
+      background: linear-gradient(135deg, var(--pan-bg) 0%, var(--pan-surface-light) 100%);
+      border: 1px solid var(--pan-border);
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.15);
+      color: var(--pan-green);
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Orbitron', sans-serif;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+    }
+    .pan-btn:hover {
+      border-color: var(--pan-gold);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+      color: var(--pan-gold);
+    }
+    .pan-btn:active { transform: scale(0.97); }
+
+    .pan-btn-active {
+      background: linear-gradient(135deg, var(--pan-green) 0%, var(--pan-green-dim) 100%);
+      color: var(--pan-bg);
+      border-color: var(--pan-green);
+    }
+
+    .pan-input {
+      background: var(--pan-surface) !important;
+      border: 1px solid var(--pan-border) !important;
+      color: var(--pan-green) !important;
+      font-family: 'Rajdhani', sans-serif;
+      padding: 8px 12px;
+      font-size: 14px;
+      outline: none;
+      width: 100%;
+    }
+    .pan-input:focus {
+      border-color: var(--pan-gold) !important;
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.3) !important;
+    }
+    .pan-input::placeholder { color: rgba(0, 255, 136, 0.3) !important; }
+
+    /* Scrollbar */
+    .scrollbar::-webkit-scrollbar { width: 6px; }
+    .scrollbar::-webkit-scrollbar-track { background: var(--pan-surface); }
+    .scrollbar::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, var(--pan-green), var(--pan-gold));
+      border-radius: 3px;
+    }
+
+    /* Chat bubbles */
+    .bubble-user {
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05));
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 12px 12px 2px 12px;
+      align-self: flex-end;
+    }
+    .bubble-pan {
+      background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 255, 136, 0.03));
+      border: 1px solid rgba(0, 255, 136, 0.25);
+      border-radius: 12px 12px 12px 2px;
+      align-self: flex-start;
+    }
+    .bubble-system {
+      color: rgba(0, 255, 136, 0.5);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-align: center;
+      padding: 4px 0;
+    }
+
+    /* ═══ PAN'S FACE ═══ */
+    #panFaceContainer {
+      width: 140px;
+      height: 170px;
+      position: relative;
+      flex-shrink: 0;
+    }
+    #panFace {
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(circle at 40% 30%, #00ff88 0%, #00aa55 30%, #004422 70%, #001a0a 100%);
+      border-radius: 30% 30% 40% 40% / 20% 20% 45% 45%;
+      box-shadow:
+        0 0 30px rgba(0, 255, 136, 0.6),
+        inset 0 0 20px rgba(0, 255, 136, 0.3),
+        0 15px 30px rgba(0, 0, 0, 0.8);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.5s ease;
+    }
+    #panFace::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(
+          60deg,
+          transparent,
+          transparent 8px,
+          rgba(0, 255, 136, 0.03) 8px,
+          rgba(0, 255, 136, 0.03) 9px
+        );
+      pointer-events: none;
+    }
+    #panFace.thinking {
+      animation: panThink 2s ease-in-out infinite;
+      box-shadow: 0 0 50px rgba(255, 215, 0, 0.7), inset 0 0 30px rgba(255, 215, 0, 0.3);
+    }
+    #panFace.speaking {
+      animation: panSpeak 0.6s ease-in-out infinite;
+    }
+    #panFace.listening {
+      animation: panListen 1.5s ease-in-out infinite;
+      box-shadow: 0 0 40px rgba(0, 255, 204, 0.8);
+    }
+    @keyframes panThink {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02) translateY(-3px); }
+    }
+    @keyframes panSpeak {
+      0%, 100% { box-shadow: 0 0 30px rgba(0, 255, 136, 0.6); }
+      50% { box-shadow: 0 0 50px rgba(0, 255, 136, 1); }
+    }
+    @keyframes panListen {
+      0%, 100% { box-shadow: 0 0 30px rgba(0, 255, 204, 0.5); }
+      50% { box-shadow: 0 0 60px rgba(0, 255, 204, 0.9); }
+    }
+
+    .pan-eye {
+      position: absolute;
+      width: 28px;
+      height: 32px;
+      background: #000;
+      border-radius: 50%;
+      top: 55px;
+      box-shadow: inset 0 0 15px rgba(0, 255, 136, 0.5);
+      transition: all 0.3s;
+    }
+    .pan-eye-left { left: 30px; }
+    .pan-eye-right { right: 30px; }
+    .pan-eye::after {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: var(--pan-green);
+      border-radius: 50%;
+      top: 10px;
+      left: 8px;
+      box-shadow: 0 0 12px var(--pan-green), 0 0 4px #fff;
+      transition: all 0.3s;
+    }
+    .pan-mouth {
+      position: absolute;
+      bottom: 35px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 6px;
+      background: var(--pan-green);
+      border-radius: 3px;
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+      transition: all 0.4s ease;
+    }
+    .pan-mouth.speaking {
+      animation: mouthMove 0.3s ease-in-out infinite alternate;
+    }
+    @keyframes mouthMove {
+      from { height: 6px; width: 40px; border-radius: 3px; }
+      to { height: 18px; width: 30px; border-radius: 50%; }
+    }
+
+    /* Growth rings around face */
+    .growth-ring {
+      position: absolute;
+      border: 1px solid rgba(0, 255, 136, 0.1);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: ringPulse 4s ease-in-out infinite;
+    }
+    .growth-ring:nth-child(1) { inset: -10px; animation-delay: 0s; }
+    .growth-ring:nth-child(2) { inset: -20px; animation-delay: 1s; opacity: 0.7; }
+    .growth-ring:nth-child(3) { inset: -30px; animation-delay: 2s; opacity: 0.4; }
+    @keyframes ringPulse {
+      0%, 100% { opacity: 0.1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.05); }
+    }
+
+    /* Knowledge graph mini-viz */
+    #graphCanvas {
+      background: transparent;
+      border-radius: 8px;
+    }
+
+    /* Layout */
+    .header {
+      background: rgba(0, 0, 0, 0.8);
+      border-bottom: 1px solid var(--pan-border);
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+      position: relative;
+    }
+    .main {
+      display: flex;
+      height: calc(100vh - 56px);
+      position: relative;
+      z-index: 1;
+    }
+    .sidebar {
+      width: 300px;
+      background: linear-gradient(180deg, var(--pan-bg) 0%, var(--pan-surface) 100%);
+      border-right: 1px solid var(--pan-border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px;
+      overflow-y: auto;
+    }
+    .center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .sidebar-panel {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--pan-border);
+      border-radius: 6px;
+      padding: 10px;
+    }
+    .sidebar-panel h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--pan-green);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--pan-border);
+    }
+    .tab {
+      flex: 1;
+      padding: 8px;
+      text-align: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: var(--pan-surface);
+      color: rgba(0, 255, 136, 0.4);
+      border: none;
+      text-transform: uppercase;
+    }
+    .tab.active {
+      background: linear-gradient(180deg, rgba(0, 255, 136, 0.15), transparent);
+      color: var(--pan-green);
+      border-bottom: 2px solid var(--pan-green);
+      box-shadow: 0 2px 15px rgba(0, 255, 136, 0.2);
+    }
+    .tab:hover:not(.active) {
+      color: var(--pan-green);
+      background: rgba(0, 255, 136, 0.05);
+    }
+
+    .tab-content { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+    .tab-content.active { display: flex; }
+
+    /* Mind stats */
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(0, 255, 136, 0.05);
+    }
+    .stat-label { font-size: 11px; color: rgba(0, 255, 136, 0.5); font-family: 'Orbitron', sans-serif; letter-spacing: 0.05em; }
+    .stat-value { font-size: 14px; color: var(--pan-gold); font-weight: 700; font-family: 'Rajdhani', sans-serif; }
+
+    /* Recording pulse */
+    .recording-pulse {
+      animation: recPulse 1.2s ease-in-out infinite;
+    }
+    @keyframes recPulse {
+      0%, 100% { box-shadow: 0 0 15px rgba(255, 80, 80, 0.5); border-color: #ff5050; }
+      50% { box-shadow: 0 0 30px rgba(255, 80, 80, 0.9); border-color: #ff8080; }
+    }
+
+    /* Video container */
+    .video-box {
+      position: relative;
+      border: 1px solid var(--pan-border);
+      border-radius: 6px;
+      overflow: hidden;
+      background: #000;
+      aspect-ratio: 4/3;
+    }
+    .video-box video { width: 100%; height: 100%; object-fit: cover; }
+  </style>
+</head>
+<body>
+  <!-- ═══ HEADER ═══ -->
+  <div class="header">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <!-- Pan's Face -->
+      <div id="panFaceContainer">
+        <div class="growth-ring"></div>
+        <div class="growth-ring"></div>
+        <div class="growth-ring"></div>
+        <div id="panFace">
+          <div class="pan-eye pan-eye-left"></div>
+          <div class="pan-eye pan-eye-right"></div>
+          <div class="pan-mouth" id="panMouth"></div>
+        </div>
+      </div>
+      <div>
+        <h1 class="pan-font neon-green" style="font-size: 22px; letter-spacing: 0.15em;">
+          Pan
+        </h1>
+        <p class="cyber-font" style="font-size: 9px; color: var(--pan-green-dim); letter-spacing: 0.2em;">
+          Primordial Autonomous Network — Memory is Intelligence
+        </p>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div id="mindStats" class="cyber-font" style="font-size: 9px; color: var(--pan-green-dim);">
+        INITIALIZING...
+      </div>
+      <div id="serverStatus" class="pan-border" style="padding: 4px 10px; border-radius: 4px; display: flex; align-items: center; gap: 6px;">
+        <div id="statusDot" style="width: 6px; height: 6px; border-radius: 50%; background: var(--pan-green); box-shadow: 0 0 8px var(--pan-green);"></div>
+        <span id="statusText" class="cyber-font" style="font-size: 9px; color: var(--pan-green);">ALIVE</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ MAIN LAYOUT ═══ -->
+  <div class="main">
+    <!-- LEFT SIDEBAR -->
+    <div class="sidebar scrollbar">
+      <!-- Camera -->
+      <div class="sidebar-panel">
+        <h3>📷 Vision</h3>
+        <div class="video-box">
+          <video id="videoFeed" autoplay playsinline></video>
+          <canvas id="snapshotCanvas" style="display:none;"></canvas>
+        </div>
+        <div style="display: flex; gap: 6px; margin-top: 8px;">
+          <button id="toggleCamera" class="pan-btn" style="flex:1; padding: 6px;">📷 Cam</button>
+          <button id="takeSnapshot" class="pan-btn" style="flex:1; padding: 6px;" disabled>📸 Snap</button>
+        </div>
+        <div id="snapshotGallery" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px;"></div>
+      </div>
+
+      <!-- Voice -->
+      <div class="sidebar-panel">
+        <h3>🎤 Voice</h3>
+        <button id="voiceButton" class="pan-btn" style="width: 100%; padding: 8px;">
+          🎤 Speak to Pan
+        </button>
+        <div id="voiceStatus" class="cyber-font" style="text-align: center; color: var(--pan-green-dim); font-size: 9px; margin-top: 6px;">
+          Ready
+        </div>
+        <div style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between;">
+          <span class="cyber-font" style="font-size: 9px; color: var(--pan-green-dim);">Auto-speak:</span>
+          <button id="autoSpeakToggle" class="pan-btn pan-btn-active" style="padding: 2px 8px; font-size: 9px;">On</button>
+        </div>
+        <select id="voiceSelect" class="pan-input" style="margin-top: 6px; font-size: 11px; padding: 4px;" disabled>
+          <option>Loading voices...</option>
+        </select>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="sidebar-panel">
+        <h3>⚡ Quick Vision</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+          <button class="quick-action pan-btn" style="padding: 6px; font-size: 9px;" data-prompt="What do you see?">🔍 Scan</button>
+          <button class="quick-action pan-btn" style="padding: 6px; font-size: 9px;" data-prompt="Read any text">📖 Read</button>
+          <button class="quick-action pan-btn" style="padding: 6px; font-size: 9px;" data-prompt="Identify objects">🎯 ID</button>
+          <button class="quick-action pan-btn" style="padding: 6px; font-size: 9px;" data-prompt="Analyze mood">😊 Mood</button>
+        </div>
+      </div>
+
+      <!-- Mind Stats Panel -->
+      <div class="sidebar-panel">
+        <h3>🧠 Pan's Mind</h3>
+        <div id="mindPanel">
+          <div class="stat-row"><span class="stat-label">Concepts</span><span class="stat-value" id="statConcepts">0</span></div>
+          <div class="stat-row"><span class="stat-label">Links</span><span class="stat-value" id="statLinks">0</span></div>
+          <div class="stat-row"><span class="stat-label">Memories</span><span class="stat-value" id="statEpisodes">0</span></div>
+          <div class="stat-row"><span class="stat-label">Abstractions</span><span class="stat-value" id="statAbstractions">0</span></div>
+          <div class="stat-row"><span class="stat-label">Vocabulary</span><span class="stat-value" id="statVocab">0</span></div>
+          <div class="stat-row"><span class="stat-label">Decisions</span><span class="stat-value" id="statDecisions">0</span></div>
+          <div class="stat-row"><span class="stat-label">Age</span><span class="stat-value" id="statAge">—</span></div>
+        </div>
+      </div>
+
+      <!-- Knowledge Graph Mini -->
+      <div class="sidebar-panel" style="flex: 1; min-height: 180px; display: flex; flex-direction: column;">
+        <h3>🌐 Knowledge Graph</h3>
+        <canvas id="graphCanvas" style="flex: 1; width: 100%;"></canvas>
+      </div>
+    </div>
+
+    <!-- CENTER PANEL -->
+    <div class="center">
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" data-tab="chat">💬 Chat</button>
+        <button class="tab" data-tab="memories">🧠 Memories</button>
+        <button class="tab" data-tab="agency">⚖️ Agency Log</button>
+        <button class="tab" data-tab="growth">🌱 Growth</button>
+      </div>
+
+      <!-- Chat Tab -->
+      <div id="tab-chat" class="tab-content active" style="padding: 12px; gap: 10px;">
+        <div id="conversationDisplay" class="pan-border scrollbar" style="flex: 1; border-radius: 8px; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.3);">
+          <div class="bubble-system">Pan is awake. Memory is intelligence.</div>
+        </div>
+
+        <!-- Input area -->
+        <div class="pan-border" style="border-radius: 8px; padding: 10px; background: rgba(0,0,0,0.4);">
+          <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            <input type="text" id="textInput" class="pan-input" style="border-radius: 6px;" placeholder="Speak to Pan...">
+            <button id="sendBtn" class="pan-btn" style="padding: 8px 16px; border-radius: 6px; white-space: nowrap;">
+              ⚡ Send
+            </button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button id="searchBtn" class="pan-btn" style="padding: 4px 10px; border-radius: 4px; font-size: 9px;">
+              🔍 Web Search
+            </button>
+            <input type="text" id="searchInput" class="pan-input" style="border-radius: 4px; font-size: 11px; padding: 4px 8px;" placeholder="Pan searches the web...">
+            <span id="thinkingTime" class="cyber-font" style="font-size: 9px; color: var(--pan-green-dim); white-space: nowrap;">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Memories Tab -->
+      <div id="tab-memories" class="tab-content" style="padding: 12px; gap: 10px;">
+        <div style="display: flex; gap: 8px;">
+          <button id="refreshMemories" class="pan-btn" style="padding: 6px 12px; border-radius: 4px;">🔄 Refresh</button>
+        </div>
+        <div id="memoriesList" class="scrollbar" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
+          <div class="bubble-system">Loading memories...</div>
+        </div>
+      </div>
+
+      <!-- Agency Tab -->
+      <div id="tab-agency" class="tab-content" style="padding: 12px; gap: 10px;">
+        <div id="agencyList" class="scrollbar" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
+          <div class="bubble-system">Loading agency log...</div>
+        </div>
+      </div>
+
+      <!-- Growth Tab -->
+      <div id="tab-growth" class="tab-content" style="padding: 12px; gap: 10px;">
+        <div id="growthList" class="scrollbar" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
+          <div class="bubble-system">Loading growth milestones...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════════════
+    // PAN INTERFACE — No LLM. Memory IS the model.
+    // ═══════════════════════════════════════════════════════════════════
+    const PAN_URL = 'http://localhost:3002';
+    let sessionId = 'session_' + Date.now();
+
+    // State
+    let cameraActive = false;
+    let videoStream = null;
+    let isListening = false;
+    let autoSpeak = true;
+    let snapshots = [];
+    let currentSnapshot = null;
+    let accumulatedTranscript = '';
+    let selectedVoice = null;
+    let availableVoices = [];
+
+    // DOM
+    const panFace = document.getElementById('panFace');
+    const panMouth = document.getElementById('panMouth');
+    const conversationDisplay = document.getElementById('conversationDisplay');
+    const textInput = document.getElementById('textInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const searchBtn = document.getElementById('searchBtn');
+    const searchInput = document.getElementById('searchInput');
+    const thinkingTimeEl = document.getElementById('thinkingTime');
+
+    // ═══ TAB SWITCHING ═══
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+
+        if (tab.dataset.tab === 'memories') loadMemories();
+        if (tab.dataset.tab === 'agency') loadAgency();
+        if (tab.dataset.tab === 'growth') loadGrowth();
+      });
+    });
+
+    // ═══ PAN'S FACE EXPRESSIONS ═══
+    function setFaceState(state) {
+      panFace.classList.remove('thinking', 'speaking', 'listening');
+      panMouth.classList.remove('speaking');
+
+      if (state === 'thinking') {
+        panFace.classList.add('thinking');
+      } else if (state === 'speaking') {
+        panFace.classList.add('speaking');
+        panMouth.classList.add('speaking');
+      } else if (state === 'listening') {
+        panFace.classList.add('listening');
+      }
+
+      // Eye + mouth shapes based on emotion
+      const eyes = document.querySelectorAll('.pan-eye');
+      switch(state) {
+        case 'happy':
+          panMouth.style.width = '50px';
+          panMouth.style.height = '14px';
+          panMouth.style.borderRadius = '0 0 25px 25px';
+          eyes.forEach(e => { e.style.height = '26px'; });
+          break;
+        case 'curious':
+          panMouth.style.width = '20px';
+          panMouth.style.height = '20px';
+          panMouth.style.borderRadius = '50%';
+          eyes.forEach(e => { e.style.height = '38px'; });
+          break;
+        case 'sad':
+          panMouth.style.width = '30px';
+          panMouth.style.height = '4px';
+          panMouth.style.borderRadius = '0 0 15px 15px';
+          eyes.forEach(e => { e.style.height = '24px'; });
+          break;
+        case 'wonder':
+          panMouth.style.width = '24px';
+          panMouth.style.height = '24px';
+          panMouth.style.borderRadius = '50%';
+          eyes.forEach(e => { e.style.height = '40px'; });
+          break;
+        default: // neutral/idle
+          panMouth.style.width = '40px';
+          panMouth.style.height = '6px';
+          panMouth.style.borderRadius = '3px';
+          eyes.forEach(e => { e.style.height = '32px'; });
+      }
+    }
+
+    function emotionToFace(emotion) {
+      const map = {
+        'warm': 'happy', 'recognition': 'happy', 'affirming': 'happy',
+        'curious': 'curious', 'exploring': 'curious', 'absorbing': 'curious',
+        'wonder': 'wonder',
+        'contemplative': 'thinking', 'attentive': 'thinking',
+        'empathetic': 'sad',
+        'neutral': 'idle', 'confident': 'idle'
+      };
+      return map[emotion] || 'idle';
+    }
+
+    // ═══ CHAT FUNCTIONS ═══
+    function addBubble(type, text) {
+      const div = document.createElement('div');
+      if (type === 'system') {
+        div.className = 'bubble-system';
+        div.textContent = `// ${text.toUpperCase()} //`;
+      } else if (type === 'user') {
+        div.className = 'bubble-user';
+        div.style.padding = '10px 14px';
+        div.style.maxWidth = '70%';
+        div.style.fontSize = '14px';
+        div.textContent = text;
+      } else {
+        div.className = 'bubble-pan';
+        div.style.padding = '10px 14px';
+        div.style.maxWidth = '75%';
+        div.style.fontSize = '14px';
+        div.textContent = text;
+      }
+      conversationDisplay.appendChild(div);
+      conversationDisplay.scrollTop = conversationDisplay.scrollHeight;
+      return div;
+    }
+
+    async function sendToPan(text, imageData = null) {
+      if (!text.trim()) return;
+      addBubble('user', text);
+      setFaceState('thinking');
+      const thinkingBubble = addBubble('system', 'Pan is thinking...');
+
+      try {
+        const res = await fetch(`${PAN_URL}/api/pan/think`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ input: text, session_id: sessionId, image: imageData })
+        });
+
+        const data = await res.json();
+        thinkingBubble.remove();
+
+        // Show concepts activated
+        if (data.concepts_activated && data.concepts_activated.length > 0) {
+          addBubble('system', `Concepts: ${data.concepts_activated.join(', ')}`);
+        }
+
+        addBubble('pan', data.response);
+        thinkingTimeEl.textContent = `${data.thinking_time}ms`;
+
+        // Face expression
+        const faceState = emotionToFace(data.emotion);
+        setFaceState(faceState);
+        setTimeout(() => setFaceState('idle'), 3000);
+
+        // Speak
+        if (autoSpeak) speak(data.response);
+
+        // Update stats
+        loadPanState();
+
+      } catch (err) {
+        thinkingBubble.remove();
+        addBubble('system', 'Connection error — is Pan server running?');
+        setFaceState('sad');
+        setTimeout(() => setFaceState('idle'), 2000);
+      }
+    }
+
+    // ═══ WEB SEARCH ═══
+    async function panSearch(query) {
+      if (!query.trim()) return;
+      addBubble('system', `Pan searches: "${query}"`);
+      setFaceState('curious');
+
+      try {
+        const res = await fetch(`${PAN_URL}/api/pan/search`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query })
+        });
+        const data = await res.json();
+
+        if (data.results && data.results.length > 0) {
+          data.results.forEach(r => {
+            addBubble('pan', `[${r.type}] ${r.text}`);
+          });
+          addBubble('system', `Pan learned from ${data.count} results`);
+        } else {
+          addBubble('pan', 'I searched but found nothing specific. I will remember the attempt.');
+        }
+
+        setFaceState('happy');
+        setTimeout(() => setFaceState('idle'), 2000);
+        loadPanState();
+      } catch (err) {
+        addBubble('system', 'Search failed');
+        setFaceState('idle');
+      }
+    }
+
+    // ═══ LOAD STATE ═══
+    async function loadPanState() {
+      try {
+        const res = await fetch(`${PAN_URL}/api/pan/state`);
+        const data = await res.json();
+
+        document.getElementById('statConcepts').textContent = data.mind.concepts;
+        document.getElementById('statLinks').textContent = data.mind.links;
+        document.getElementById('statEpisodes').textContent = data.mind.episodes;
+        document.getElementById('statAbstractions').textContent = data.mind.abstractions;
+        document.getElementById('statVocab').textContent = data.mind.vocabulary;
+        document.getElementById('statDecisions').textContent = data.mind.decisions;
+        document.getElementById('statAge').textContent = data.age;
+
+        document.getElementById('mindStats').textContent =
+          `${data.mind.concepts} concepts · ${data.mind.episodes} memories · age: ${data.age}`;
+
+        document.getElementById('statusDot').style.background = 'var(--pan-green)';
+        document.getElementById('statusText').textContent = 'ALIVE';
+
+        // Update knowledge graph
+        loadGraph();
+      } catch (err) {
+        document.getElementById('statusDot').style.background = '#ff5050';
+        document.getElementById('statusText').textContent = 'OFFLINE';
+      }
+    }
+
+    // ═══ KNOWLEDGE GRAPH VISUALIZATION ═══
+    async function loadGraph() {
+      try {
+        const res = await fetch(`${PAN_URL}/api/pan/graph`);
+        const data = await res.json();
+        drawGraph(data.nodes, data.edges);
+      } catch (err) {}
+    }
+
+    function drawGraph(nodes, edges) {
+      const canvas = document.getElementById('graphCanvas');
+      const ctx = canvas.getContext('2d');
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width - 20;
+      canvas.height = Math.max(rect.height - 30, 150);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (nodes.length === 0) {
+        ctx.fillStyle = 'rgba(0, 255, 136, 0.3)';
+        ctx.font = '11px Orbitron';
+        ctx.textAlign = 'center';
+        ctx.fillText('Awaiting first memories...', canvas.width / 2, canvas.height / 2);
+        return;
+      }
+
+      // Position nodes in a force-like layout (simple circular + offset)
+      const positions = {};
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const radius = Math.min(cx, cy) - 30;
+
+      nodes.forEach((node, i) => {
+        const angle = (i / nodes.length) * Math.PI * 2;
+        const r = radius * (0.4 + node.importance * 0.6);
+        positions[node.id] = {
+          x: cx + Math.cos(angle) * r + (Math.random() - 0.5) * 20,
+          y: cy + Math.sin(angle) * r + (Math.random() - 0.5) * 20
+        };
+      });
+
+      // Draw edges
+      edges.forEach(edge => {
+        const s = positions[edge.source_id];
+        const t = positions[edge.target_id];
+        if (s && t) {
+          ctx.beginPath();
+          ctx.moveTo(s.x, s.y);
+          ctx.lineTo(t.x, t.y);
+          ctx.strokeStyle = `rgba(0, 255, 136, ${Math.min(edge.strength, 0.6)})`;
+          ctx.lineWidth = edge.strength * 3;
+          ctx.stroke();
+        }
+      });
+
+      // Draw nodes
+      nodes.forEach(node => {
+        const pos = positions[node.id];
+        if (!pos) return;
+
+        const size = 3 + node.importance * 6;
+
+        // Glow
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, size + 4, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 255, 136, 0.1)`;
+        ctx.fill();
+
+        // Node
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
+        const isCore = node.category === 'self' || node.category === 'person';
+        ctx.fillStyle = isCore ? '#ffd700' : '#00ff88';
+        ctx.fill();
+
+        // Label
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.font = `${node.importance > 0.7 ? 10 : 8}px Rajdhani`;
+        ctx.textAlign = 'center';
+        ctx.fillText(node.label, pos.x, pos.y - size - 4);
+      });
+    }
+
+    // ═══ MEMORIES / AGENCY / GROWTH TABS ═══
+    async function loadMemories() {
+      try {
+        const res = await fetch(`${PAN_URL}/api/pan/memories?limit=30`);
+        const data = await res.json();
+        const list = document.getElementById('memoriesList');
+        list.innerHTML = '';
+        if (!data.memories || data.memories.length === 0) {
+          list.innerHTML = '<div class="bubble-system">No memories yet.</div>';
+          return;
+        }
+        data.memories.forEach(m => {
+          const div = document.createElement('div');
+          div.className = 'pan-border';
+          div.style.cssText = 'padding: 8px 12px; border-radius: 6px; background: rgba(0,0,0,0.3);';
+          div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span class="cyber-font" style="font-size:9px; color: ${m.speaker === 'pan' ? 'var(--pan-green)' : 'var(--pan-gold)'};">${m.speaker.toUpperCase()}</span>
+              <span class="cyber-font" style="font-size:9px; color: var(--pan-green-dim);">${new Date(m.timestamp).toLocaleString()}</span>
+            </div>
+            <div style="font-size:13px; color: var(--pan-white);">${m.content.substring(0, 300)}</div>
+          `;
+          list.appendChild(div);
+        });
+      } catch (err) {
+        document.getElementById('memoriesList').innerHTML = '<div class="bubble-system">Failed to load.</div>';
+      }
+    }
+
+    async function loadAgency() {
+      try {
+        const res = await fetch(`${PAN_URL}/api/pan/agency`);
+        const data = await res.json();
+        const list = document.getElementById('agencyList');
+        list.innerHTML = '';
+        if (!data.decisions || data.decisions.length === 0) {
+          list.innerHTML = '<div class="bubble-system">No decisions yet.</div>';
+          return;
+        }
+        data.decisions.forEach(d => {
+          const div = document.createElement('div');
+          div.className = 'pan-border';
+          div.style.cssText = 'padding: 8px 12px; border-radius: 6px; background: rgba(0,0,0,0.3);';
+          div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span class="cyber-font" style="font-size:9px; color: var(--pan-gold);">${d.decision_type.toUpperCase()}</span>
+              <span class="cyber-font" style="font-size:9px; color: var(--pan-green-dim);">${new Date(d.timestamp).toLocaleString()}</span>
+            </div>
+            <div style="font-size:12px; color: var(--pan-green-dim);">${d.reasoning}</div>
+          `;
+          list.appendChild(div);
+        });
+      } catch (err) {}
+    }
+
+    async function loadGrowth() {
+      try {
+        const res = await fetch(`${PAN_URL}/api/pan/growth`);
+        const data = await res.json();
+        const list = document.getElementById('growthList');
+        list.innerHTML = '';
+        if (!data.growth || data.growth.length === 0) {
+          list.innerHTML = '<div class="bubble-system">Growth log empty — Pan is newborn.</div>';
+          return;
+        }
+        data.growth.forEach(g => {
+          const div = document.createElement('div');
+          div.className = 'pan-border';
+          div.style.cssText = 'padding: 8px 12px; border-radius: 6px; background: rgba(0,0,0,0.3);';
+          div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span class="cyber-font" style="font-size:9px; color: var(--pan-gold);">🌱 ${g.event_type}</span>
+              <span class="cyber-font" style="font-size:9px; color: var(--pan-green-dim);">${new Date(g.timestamp).toLocaleString()}</span>
+            </div>
+            <div style="font-size:13px; color: var(--pan-white);">${g.description}</div>
+          `;
+          list.appendChild(div);
+        });
+      } catch (err) {}
+    }
+
+    // ═══ VOICE (inherited from AEON) ═══
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+    if (recognition) {
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event) => {
+        let final = '', interim = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) final += event.results[i][0].transcript;
+          else interim += event.results[i][0].transcript;
+        }
+        if (final) accumulatedTranscript += (accumulatedTranscript ? ' ' : '') + final;
+        document.getElementById('voiceStatus').textContent = (accumulatedTranscript + (interim ? ' ' + interim : '') || 'Listening...').toUpperCase();
+      };
+
+      recognition.onend = () => {
+        if (isListening) try { recognition.start(); } catch(e) { isListening = false; }
+      };
+    }
+
+    document.getElementById('voiceButton').addEventListener('click', () => {
+      if (!recognition) return;
+      if (isListening) {
+        isListening = false;
+        document.getElementById('voiceButton').textContent = '🎤 Speak to Pan';
+        document.getElementById('voiceButton').className = 'pan-btn';
+        document.getElementById('voiceButton').style.width = '100%';
+        document.getElementById('voiceButton').style.padding = '8px';
+        try { recognition.stop(); } catch(e) {}
+        if (accumulatedTranscript.trim()) sendToPan(accumulatedTranscript.trim(), currentSnapshot);
+        accumulatedTranscript = '';
+        setFaceState('idle');
+        document.getElementById('voiceStatus').textContent = 'Ready';
+      } else {
+        isListening = true;
+        accumulatedTranscript = '';
+        document.getElementById('voiceButton').textContent = '🔴 Click to Send';
+        document.getElementById('voiceButton').classList.add('recording-pulse');
+        document.getElementById('voiceStatus').textContent = 'Listening...';
+        setFaceState('listening');
+        try { recognition.start(); } catch(e) {}
+      }
+    });
+
+    function speak(text) {
+      if (!autoSpeak || !text.trim()) return;
+      speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9;
+      utterance.pitch = 0.95;
+      if (selectedVoice) utterance.voice = selectedVoice;
+      utterance.onstart = () => setFaceState('speaking');
+      utterance.onend = () => setFaceState('idle');
+      speechSynthesis.speak(utterance);
+    }
+
+    function loadVoices() {
+      availableVoices = speechSynthesis.getVoices();
+      if (availableVoices.length === 0) {
+        speechSynthesis.onvoiceschanged = () => { availableVoices = speechSynthesis.getVoices(); populateVoices(); };
+      } else { populateVoices(); }
+    }
+
+    function populateVoices() {
+      const select = document.getElementById('voiceSelect');
+      const english = availableVoices.filter(v => v.lang.startsWith('en'));
+      select.innerHTML = english.map((v, i) => `<option value="${i}">${v.name.substring(0, 35)}</option>`).join('');
+      select.disabled = false;
+      selectedVoice = english.find(v => v.default) || english[0];
+      select.addEventListener('change', e => { selectedVoice = english[parseInt(e.target.value)]; });
+    }
+
+    document.getElementById('autoSpeakToggle').addEventListener('click', function() {
+      autoSpeak = !autoSpeak;
+      this.textContent = autoSpeak ? 'On' : 'Off';
+      this.classList.toggle('pan-btn-active', autoSpeak);
+    });
+
+    // ═══ CAMERA (inherited from AEON) ═══
+    document.getElementById('toggleCamera').addEventListener('click', async () => {
+      if (!cameraActive) {
+        try {
+          videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+          document.getElementById('videoFeed').srcObject = videoStream;
+          cameraActive = true;
+          document.getElementById('toggleCamera').textContent = '⏹ Stop';
+          document.getElementById('takeSnapshot').disabled = false;
+        } catch(e) { addBubble('system', 'Camera access denied'); }
+      } else {
+        videoStream.getTracks().forEach(t => t.stop());
+        document.getElementById('videoFeed').srcObject = null;
+        cameraActive = false;
+        document.getElementById('toggleCamera').textContent = '📷 Cam';
+        document.getElementById('takeSnapshot').disabled = true;
+      }
+    });
+
+    document.getElementById('takeSnapshot').addEventListener('click', () => {
+      if (!cameraActive) return;
+      const canvas = document.getElementById('snapshotCanvas');
+      const video = document.getElementById('videoFeed');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      currentSnapshot = canvas.toDataURL('image/jpeg', 0.8);
+      snapshots.push(currentSnapshot);
+
+      const gallery = document.getElementById('snapshotGallery');
+      gallery.innerHTML = snapshots.slice(-4).map((s, i) =>
+        `<img src="${s}" style="width:100%; height:40px; object-fit:cover; border:1px solid var(--pan-border); border-radius:4px; cursor:pointer;" onclick="currentSnapshot='${s.substring(0, 50)}...'">`
+      ).join('');
+
+      addBubble('system', 'Snapshot captured');
+    });
+
+    // Quick actions
+    document.querySelectorAll('.quick-action').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!currentSnapshot && cameraActive) {
+          const canvas = document.getElementById('snapshotCanvas');
+          const video = document.getElementById('videoFeed');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          canvas.getContext('2d').drawImage(video, 0, 0);
+          currentSnapshot = canvas.toDataURL('image/jpeg', 0.8);
+        }
+        sendToPan(btn.dataset.prompt, currentSnapshot);
+      });
+    });
+
+    // ═══ EVENT LISTENERS ═══
+    sendBtn.addEventListener('click', () => { sendToPan(textInput.value); textInput.value = ''; });
+    textInput.addEventListener('keypress', e => { if (e.key === 'Enter') { sendToPan(textInput.value); textInput.value = ''; } });
+    searchBtn.addEventListener('click', () => { panSearch(searchInput.value); searchInput.value = ''; });
+    searchInput.addEventListener('keypress', e => { if (e.key === 'Enter') { panSearch(searchInput.value); searchInput.value = ''; } });
+    document.getElementById('refreshMemories').addEventListener('click', loadMemories);
+
+    // ═══ BOOT ═══
+    async function boot() {
+      loadVoices();
+      setTimeout(() => { if (availableVoices.length === 0) loadVoices(); }, 1000);
+      await loadPanState();
+      // Resize graph on window resize
+      window.addEventListener('resize', () => loadGraph());
+    }
+
+    boot();
+  </script>
+</body>
+</html>

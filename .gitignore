@@ -1,0 +1,54 @@
+# Pan-Birth v10 .gitignore
+# Scoped for public release: code + live trained minds + LICENSE + package.json + HTML interfaces.
+# Everything else stays local on NASA7 as research record.
+
+# Node
+node_modules/
+npm-debug.log
+
+# Today's-session backups (v10 deployment)
+*.bak-pre-v10-*
+
+# Historical development backups (pre-v10 archaeology)
+*.bak-*
+*.backup-*
+*.bak*
+
+# SQLite runtime sidecars (never portable; data is in the .db files post-checkpoint)
+*.db-wal
+*.db-shm
+
+# Server stdout logs
+server-v8.out
+v10-pan-migration-log.txt
+*.log
+
+# The 0-byte stray placeholder in minds/
+minds/pan_mind.db
+
+# Research archive — kept locally on NASA7, not published
+archive/
+
+# Editor / OS junk
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*~
+*.swp
+
+# Predecessor versions — kept locally on NASA7 as research record, not published
+consciousness-city-server.js
+consciousness-city-server-v4.js
+consciousness-city-server-v5.js
+consciousness-city-server-v6.js
+consciousness-city-server-v7.js
+cognitive-engine-v6.js
+omni-truth-v7.js
+strength-profiles-v6.js
+pan-server.js
+migrate.js
+test-search.js
+
+# Aeon-hardcoded slot-7 migration — flagged in v10 spec §6 as not-ship-ready
+migrate-v9-slot7-verification-table.js
