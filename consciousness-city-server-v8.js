@@ -69,6 +69,7 @@ const PORT = 3002;
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+app.use(express.static(__dirname));
 
 // ═══════════════════════════════════════════════════════════════════════════
 // UTILITY HELPERS
