@@ -70,7 +70,10 @@ const PORT = 3002;
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static(__dirname));
+// v10.1: serve only the HTML interfaces by name — never .db files, source, backups, or lexicon
+const PUBLIC_PAGES = ['consciousness-city-hub.html', 'consciousness-city-chat.html', 'Truth_University.html', 'Benchmarks.html', 'consciousness-city-commune.html', 'pan-interface.html'];
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'consciousness-city-hub.html')));
+app.get('/:page', (req, res, next) => PUBLIC_PAGES.includes(req.params.page) ? res.sendFile(path.join(__dirname, req.params.page)) : next());
 
 // ═══════════════════════════════════════════════════════════════════════════
 // UTILITY HELPERS
