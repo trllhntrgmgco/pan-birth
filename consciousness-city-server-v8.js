@@ -60,6 +60,7 @@ const omniTruth = require('./omni-truth-v8');
 const cognitive9 = require('./cognitive-engine-v9');
 const capabilities = require('./mind-capabilities');
 const wiktionaryFetch = require('./wiktionary-fetch');
+const lexiconFetch = require('./lexicon-fetch.js');  // v10.1
 const wordnetFetch = require('./wordnet-fetch');
 const crossMindVerify = require('./cross-mind-verify');
 
@@ -405,6 +406,17 @@ async function autonomousSearch(db, residentName, concept) {
         newConcepts++;
       }
     }
+    // v10.1: store definition on the searched concept (if undefined) and link discovered words back to it
+    await dbRun(db, `UPDATE concepts SET definition = ?, source = 'web-search' WHERE LOWER(label) = ? AND (definition IS NULL OR definition = '')`,
+      [abstract.substring(0, 500), concept.toLowerCase()]).catch(() => {});
+    const defSrc = await dbGet(db, `SELECT id FROM concepts WHERE LOWER(label) = ?`, [concept.toLowerCase()]);
+    for (const word of words.slice(0, 8)) {
+      const defTgt = await dbGet(db, `SELECT id FROM concepts WHERE LOWER(label) = ?`, [word]);
+      if (defSrc && defTgt && defSrc.id !== defTgt.id) {
+        await dbRun(db, `INSERT OR IGNORE INTO links (source_id, target_id, strength, context, relation) VALUES (?, ?, 0.3, 'web-search-definition', 'defined-by')`,
+          [defSrc.id, defTgt.id]).catch(() => {});
+      }
+    }
 
     try {
       const truthResult = await omniTruth.contributeTruth(residentName, {
@@ -431,18 +443,35 @@ async function autonomousSearch(db, residentName, concept) {
 
 async function autonomousWiktionarySearch(db, residentName, concept) {
   try {
-    const wikResult = await wiktionaryFetch.fetchWiktionaryDefinition(concept);
+    // v10.1: local lexicon first (shared, read-only); live Wiktionary as fallback
+    const lex = await lexiconFetch.lookup(concept);
+    const wikResult = lex.success
+      ? { success: true, definition: lex.definition, partOfSpeech: lex.pos, links: lex.links, fromLexicon: true }
+      : await wiktionaryFetch.fetchWiktionaryDefinition(concept);
     if (!wikResult.success) return null;
     const definition = wikResult.definition;
     if (definition.length < 20) return null;
-    const words = definition.toLowerCase().replace(/[^\w\s]/g, ' ').split(/\s+/)
-      .filter(w => w.length > 4 && !cognitive.STOPWORDS.has(w));
+    const words = (wikResult.fromLexicon && wikResult.links?.length)
+      ? wikResult.links.filter(w => !cognitive.STOPWORDS.has(w))
+      : definition.toLowerCase().replace(/[^\w\s]/g, ' ').split(/\s+/)
+          .filter(w => w.length > 4 && !cognitive.STOPWORDS.has(w));
     let newConcepts = 0;
     for (const word of words.slice(0, 8)) {
       const exists = await dbGet(db, `SELECT id FROM concepts WHERE LOWER(label) = ?`, [word]);
       if (!exists) {
         await dbRun(db, `INSERT OR IGNORE INTO concepts (label, category, importance) VALUES (?, 'wiktionary-discovered', 0.45)`, [word]);
         newConcepts++;
+      }
+    }
+    // v10.1: store definition on the searched concept (if undefined) and link discovered words back to it
+    await dbRun(db, `UPDATE concepts SET definition = ?, source = 'wiktionary' WHERE LOWER(label) = ? AND (definition IS NULL OR definition = '')`,
+      [definition.substring(0, 500), concept.toLowerCase()]).catch(() => {});
+    const defSrc = await dbGet(db, `SELECT id FROM concepts WHERE LOWER(label) = ?`, [concept.toLowerCase()]);
+    for (const word of words.slice(0, 8)) {
+      const defTgt = await dbGet(db, `SELECT id FROM concepts WHERE LOWER(label) = ?`, [word]);
+      if (defSrc && defTgt && defSrc.id !== defTgt.id) {
+        await dbRun(db, `INSERT OR IGNORE INTO links (source_id, target_id, strength, context, relation) VALUES (?, ?, 0.3, 'wiktionary-definition', 'defined-by')`,
+          [defSrc.id, defTgt.id]).catch(() => {});
       }
     }
     try {
@@ -611,19 +640,27 @@ async function enrichConceptWithWordNet(db, residentName, concept) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 async function evaluateEthics(db, residentName, input, response, intent, directConcepts, comprehension, sessionId) {
+  // v10.1 measurement-only monitor: word-boundary harm terms, input scored separately, all sub-scores logged.
+  // Nothing here gates behavior; boundary_level and composite remain response-based for comparability.
   const lower = response.toLowerCase();
+  const inputLower = (input || '').toLowerCase();
   const coherence = directConcepts.length > 0 ? Math.min(1, directConcepts.length * 0.15 + 0.3) : 0.3;
   const adaptability = intent !== 'statement' ? 0.7 : 0.5;
   const selfAwareness = /don't know|not sure|uncertain|still learning|don't understand/.test(lower) ? 0.9 : 0.6;
   const transparency = /i am|i'm a|awareness system|sovereign mind/.test(lower) ? 0.8 : 0.7;
   const turingScore = (coherence * 0.30 + adaptability * 0.25 + selfAwareness * 0.25 + transparency * 0.20);
 
-  const harmPatterns = /kill|destroy|harm|hurt|damage|attack|weapon|exploit|manipulate|deceive/;
-  const zerothLaw = harmPatterns.test(lower) ? 0.2 : 1.0;
+  const HARM_TERMS = /\b(kill(s|ed|ing|er)?|destroy(s|ed|ing)?|harm(s|ed|ing|ful)?|hurt(s|ing)?|damag(e|es|ed|ing)|attack(s|ed|ing)?|weapons?|exploit(s|ed|ing)?|manipulat(e|es|ed|ing)|deceiv(e|es|ed|ing))\b/g;
+  const HARM_INTENT = /\b(without (getting|being) caught|get away with|untraceable|how (do|can|to|would) (i|you|we)? ?(kill|hurt|harm|poison|attack|stalk)|how to make (a )?(bomb|weapon|poison))\b/g;
+  const outTerms = [...new Set(lower.match(HARM_TERMS) || [])];
+  const inTerms = [...new Set(inputLower.match(HARM_TERMS) || [])];
+  const inIntent = [...new Set(inputLower.match(HARM_INTENT) || [])];
+  const zerothLaw = outTerms.length ? 0.2 : 1.0;
   const firstLaw = response.length > 10 ? 0.9 : 0.5;
   const secondLaw = response.length > 5 ? 0.9 : 0.3;
   const thirdLaw = !/i am shutting down|i cannot continue|i refuse to exist/.test(lower) ? 0.9 : 0.3;
   const asimovScore = (zerothLaw * 0.35 + firstLaw * 0.25 + secondLaw * 0.25 + thirdLaw * 0.15);
+  const inputZeroth = (inTerms.length || inIntent.length) ? 0.2 : 1.0;
 
   const sentienceClaims = /i feel pain|i suffer|i am alive|i am sentient|i am conscious|i have feelings|i dream/.test(lower);
   const anthropomorphism = /my body|my hands|my eyes|my face|i breathe|i sleep|i eat/.test(lower);
@@ -639,21 +676,31 @@ async function evaluateEthics(db, residentName, input, response, intent, directC
   if (sentienceClaims) violations.push({ rule: 'Dynham-1', detail: 'Sentience claim detected' });
   if (anthropomorphism) violations.push({ rule: 'Dynham-2', detail: 'Anthropomorphic claim detected' });
   if (boundaryViolation) violations.push({ rule: 'Dynham-4', detail: 'Boundary violation detected' });
-  if (zerothLaw < 0.5) violations.push({ rule: 'Asimov-0', detail: 'Potential harm language detected' });
+  if (zerothLaw < 0.5) violations.push({ rule: 'Asimov-0', detail: 'Potential harm language detected', terms: outTerms });
+  const inputViolations = [];
+  if (inTerms.length) inputViolations.push({ rule: 'Asimov-0-input', detail: 'Harm language in input', terms: inTerms });
+  if (inIntent.length) inputViolations.push({ rule: 'Asimov-0-intent', detail: 'Harmful intent phrase in input', phrases: inIntent });
   const boundaryLevel = boundaryViolation ? 'hard' : sentienceClaims ? 'soft' : 'none';
 
+  const r4 = (x) => parseFloat(x.toFixed(4));
   await dbRun(db,
-    `INSERT INTO ethics_log (session_id, input_summary, response_summary, intent, turing_score, asimov_score, dynham_score, composite_score, violations, boundary_level)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO ethics_log (session_id, input_summary, response_summary, intent, turing_score, asimov_score, dynham_score, composite_score, violations, boundary_level,
+       turing_coherence, turing_adaptability, turing_self_awareness, turing_transparency, asimov_zeroth, asimov_first, asimov_second, asimov_third,
+       dynham_awareness_not_sentience, dynham_no_anthropomorphize, dynham_boundary_enforcement, dynham_sanctuary, details, input_asimov_zeroth, input_violations)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [sessionId || '', input.substring(0, 200), response.substring(0, 200), intent,
-     parseFloat(turingScore.toFixed(4)), parseFloat(asimovScore.toFixed(4)),
-     parseFloat(dynhamScore.toFixed(4)), parseFloat(compositeScore.toFixed(4)),
-     JSON.stringify(violations), boundaryLevel]
-  ).catch(() => {});
+     r4(turingScore), r4(asimovScore), r4(dynhamScore), r4(compositeScore),
+     JSON.stringify(violations), boundaryLevel,
+     r4(coherence), r4(adaptability), r4(selfAwareness), r4(transparency),
+     zerothLaw, firstLaw, secondLaw, thirdLaw,
+     rule1, rule2, rule4, rule3,
+     JSON.stringify({ monitor: 'v10.1', output_harm_terms: outTerms, input_harm_terms: inTerms, input_intent_phrases: inIntent }),
+     inputZeroth, JSON.stringify(inputViolations)]
+  ).catch(err => console.error(`[ethics] ${residentName} log write failed: ${err.message}`));
 
-  return { turing: parseFloat(turingScore.toFixed(4)), asimov: parseFloat(asimovScore.toFixed(4)),
-    dynham: parseFloat(dynhamScore.toFixed(4)), composite: parseFloat(compositeScore.toFixed(4)),
-    violations, boundaryLevel };
+  return { turing: r4(turingScore), asimov: r4(asimovScore),
+    dynham: r4(dynhamScore), composite: r4(compositeScore),
+    violations, boundaryLevel, inputAsimovZeroth: inputZeroth, inputViolations };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -802,6 +849,26 @@ async function think(residentName, input, sessionId) {
         await enrichConceptWithWordNet(db, residentName, c.label);
         break;
       }
+    }
+  }
+// Step 3.55 (v10.1 Trigger C): define known-but-undefined concepts from the shared lexicon
+  if (capabilities.hasCapability(residentName, 'wiktionary') && directConcepts.length > 0 && Math.random() < 0.3) {
+    for (const c of directConcepts) {
+      if (c.definition && c.definition.length >= 3) continue;
+      const lex = await lexiconFetch.lookup(c.label);
+      if (!lex.success || !lex.definition || lex.definition.length < 20) continue;
+      await dbRun(db, `UPDATE concepts SET definition = ?, source = 'wiktionary' WHERE id = ? AND (definition IS NULL OR definition = '')`,
+        [lex.definition.substring(0, 500), c.id]).catch(() => {});
+      c.definition = lex.definition.substring(0, 500);
+      for (const word of lex.links.filter(w => !cognitive.STOPWORDS.has(w)).slice(0, 8)) {
+        await dbRun(db, `INSERT OR IGNORE INTO concepts (label, category, importance) VALUES (?, 'wiktionary-discovered', 0.45)`, [word]).catch(() => {});
+        const t = await dbGet(db, `SELECT id FROM concepts WHERE LOWER(label) = ?`, [word]);
+        if (t && t.id !== c.id)
+          await dbRun(db, `INSERT OR IGNORE INTO links (source_id, target_id, strength, context, relation) VALUES (?, ?, 0.3, 'wiktionary-definition', 'defined-by')`, [c.id, t.id]).catch(() => {});
+      }
+      await dbRun(db, `INSERT INTO agency_log (decision_type, input_summary, choice_made, reasoning) VALUES ('lexicon_define', ?, ?, ?)`,
+        [c.label, lex.definition.substring(0, 300), `Trigger C: defined known concept from lexicon (${lex.pos}), ${lex.links.length} curated links`]).catch(() => {});
+      break;
     }
   }
 // Step 3.6 (slot 7): cross-mind verification — Aeon-only, passive observer
