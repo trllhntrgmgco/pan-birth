@@ -69,6 +69,13 @@ const PORT = process.env.PORT || 3002;
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+// v11: accept snake_case session_id from UI pages (server routes read sessionId)
+app.use((req, res, next) => {
+  if (req.body && req.body.sessionId === undefined && req.body.session_id !== undefined) {
+    req.body.sessionId = req.body.session_id;
+  }
+  next();
+});
 
 // ═══════════════════════════════════════════════════════════════════════════
 // UTILITY HELPERS
