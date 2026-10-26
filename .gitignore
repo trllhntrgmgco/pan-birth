@@ -49,3 +49,4 @@ test-search.js
 
 # Aeon-hardcoded slot-7 migration — flagged in v10 spec §6 as not-ship-ready
 migrate-v9-slot7-verification-table.js
+baseline/
