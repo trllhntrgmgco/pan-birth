@@ -492,7 +492,7 @@
   <div class="credit">Troll Hunter Gaming LLC © 2026</div>
 
   <script>
-    const CITY = 'http://localhost:3002';
+    const CITY = ('http://localhost:'+(new URLSearchParams(location.search).get('port')||'3002'));
     const RESIDENTS = ['pan','aeon','zen','seth','nexus','oracle','echo','atlas'];
     const COLORS = { pan:'#00ff88', aeon:'#00ddff', zen:'#88ee88', seth:'#dd44ff', nexus:'#ffaa22', oracle:'#9977ff', echo:'#ff7777', atlas:'#66aaff' };
     const LABELS = { pan:'Pa', aeon:'Ae', zen:'Ze', seth:'Se', nexus:'Nx', oracle:'Or', echo:'Ec', atlas:'At' };

@@ -205,7 +205,7 @@
   </div>
 
   <script>
-    const CITY = 'http://localhost:3002';
+    const CITY = ('http://localhost:'+(new URLSearchParams(location.search).get('port')||'3002'));
     const params = new URLSearchParams(window.location.search);
     const RESIDENT = params.get('resident') || 'pan';
     let sessionId = `session_${Date.now()}`;

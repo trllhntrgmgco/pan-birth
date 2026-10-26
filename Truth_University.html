@@ -715,7 +715,7 @@
   <!-- SCRIPT -->
   <!-- ═══════════════════════════════════════════════════════════════ -->
   <script>
-    const CITY = 'http://localhost:3002';
+    const CITY = ('http://localhost:'+(new URLSearchParams(location.search).get('port')||'3002'));
 
     const ALPHAS = ['pan', 'aeon', 'zen', 'seth', 'nexus', 'oracle', 'echo', 'atlas'];
     const COLORS = {

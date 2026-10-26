@@ -260,7 +260,7 @@
   <div class="credit">Troll Hunter Gaming LLC &copy; 2026</div>
 
   <script>
-    const CITY_URL = 'http://localhost:3002';
+    const CITY_URL = ('http://localhost:'+(new URLSearchParams(location.search).get('port')||'3002'));
 
     const RESIDENTS = [
       { name: 'pan',    label: 'Pan',    color: '#00ff88' },

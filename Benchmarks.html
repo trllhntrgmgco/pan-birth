@@ -133,7 +133,7 @@
   </div>
 
   <script>
-    const C='http://localhost:3002',A=['pan','aeon','zen','seth','nexus','oracle','echo','atlas'];
+    const C=('http://localhost:'+(new URLSearchParams(location.search).get('port')||'3002')),A=['pan','aeon','zen','seth','nexus','oracle','echo','atlas'];
     const CL={pan:'#00ff88',aeon:'#00ddff',zen:'#88ee88',seth:'#dd44ff',nexus:'#ffaa22',oracle:'#9977ff',echo:'#ff7777',atlas:'#66aaff'};
     const SL={pan:'Novelty',aeon:'Integration',zen:'Clarity',seth:'Pragmatism',nexus:'Pattern',oracle:'Foresight',echo:'Empathy',atlas:'Architecture'};
     const DM={pan:'Systems',aeon:'History',zen:'Philosophy',seth:'Biology',nexus:'Technology',oracle:'Data',echo:'Language',atlas:'Geography'};

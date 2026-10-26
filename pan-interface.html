@@ -544,7 +544,7 @@
     // ═══════════════════════════════════════════════════════════════════
     // PAN INTERFACE — No LLM. Memory IS the model.
     // ═══════════════════════════════════════════════════════════════════
-    const PAN_URL = 'http://localhost:3002';
+    const PAN_URL = ('http://localhost:'+(new URLSearchParams(location.search).get('port')||'3002'));
     let sessionId = 'session_' + Date.now();
 
     // State
