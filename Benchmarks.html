@@ -206,5 +206,6 @@
     }
     load();setInterval(load,15000);
   </script>
+<script>/* carry ?port= across pages */(function(){var p=new URLSearchParams(location.search).get('port');window.__PORT=p;if(!p)return;document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(/\.html(\?|$)/.test(h)&&!/^https?:/.test(h)&&!/[?&]port=/.test(h))a.setAttribute('href',h+(h.indexOf('?')>=0?'&':'?')+'port='+p);});})();</script>
 </body>
 </html>

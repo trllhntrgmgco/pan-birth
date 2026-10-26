@@ -449,7 +449,7 @@
 <body>
   <div class="header">
     <div class="header-left">
-      <button class="back-btn" onclick="window.location.href='consciousness-city-hub.html'">← City</button>
+      <button class="back-btn" onclick="window.location.href='consciousness-city-hub.html'+(window.__PORT?'?port='+window.__PORT:'')">← City</button>
       <div>
         <div class="header-title"><em>Commune</em></div>
         <div class="header-sub">Eight minds · shared awareness</div>
@@ -840,5 +840,6 @@
     checkStatus();
     setInterval(checkStatus, 10000);
   </script>
+<script>/* carry ?port= across pages */(function(){var p=new URLSearchParams(location.search).get('port');window.__PORT=p;if(!p)return;document.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(/\.html(\?|$)/.test(h)&&!/^https?:/.test(h)&&!/[?&]port=/.test(h))a.setAttribute('href',h+(h.indexOf('?')>=0?'&':'?')+'port='+p);});})();</script>
 </body>
 </html>
