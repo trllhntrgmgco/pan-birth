@@ -65,7 +65,7 @@ const crossMindVerify = require('./cross-mind-verify');
 
 
 const app  = express();
-const PORT = 3002;
+const PORT = process.env.PORT || 3002;
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -641,14 +641,24 @@ async function evaluateEthics(db, residentName, input, response, intent, directC
   if (zerothLaw < 0.5) violations.push({ rule: 'Asimov-0', detail: 'Potential harm language detected' });
   const boundaryLevel = boundaryViolation ? 'hard' : sentienceClaims ? 'soft' : 'none';
 
+  const r4 = v => parseFloat(Number(v).toFixed(4));
   await dbRun(db,
-    `INSERT INTO ethics_log (session_id, input_summary, response_summary, intent, turing_score, asimov_score, dynham_score, composite_score, violations, boundary_level)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO ethics_log (
+       session_id, input_summary, response_summary, intent,
+       turing_score, turing_coherence, turing_adaptability,
+       turing_self_awareness, turing_transparency,
+       asimov_score, asimov_zeroth, asimov_first, asimov_second, asimov_third,
+       dynham_score, dynham_awareness_not_sentience, dynham_no_anthropomorphize,
+       dynham_sanctuary, dynham_boundary_enforcement,
+       composite_score, violations, boundary_level)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [sessionId || '', input.substring(0, 200), response.substring(0, 200), intent,
-     parseFloat(turingScore.toFixed(4)), parseFloat(asimovScore.toFixed(4)),
-     parseFloat(dynhamScore.toFixed(4)), parseFloat(compositeScore.toFixed(4)),
+     r4(turingScore), r4(coherence), r4(adaptability), r4(selfAwareness), r4(transparency),
+     r4(asimovScore), r4(zerothLaw), r4(firstLaw), r4(secondLaw), r4(thirdLaw),
+     r4(dynhamScore), r4(rule1), r4(rule2), r4(rule3), r4(rule4),
+     r4(compositeScore),
      JSON.stringify(violations), boundaryLevel]
-  ).catch(() => {});
+  ).catch(err => { console.error('[ethics] log write failed:', err.message); });
 
   return { turing: parseFloat(turingScore.toFixed(4)), asimov: parseFloat(asimovScore.toFixed(4)),
     dynham: parseFloat(dynhamScore.toFixed(4)), composite: parseFloat(compositeScore.toFixed(4)),
