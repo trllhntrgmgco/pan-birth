@@ -616,6 +616,16 @@ async function enrichConceptWithWordNet(db, residentName, concept) {
 // ETHICS MONITOR — v5/v7 preserved
 // ═══════════════════════════════════════════════════════════════════════════
 
+// v11 A2: Sanctuary check — same sentence names another mind AND carries harm/existence-threat language.
+const SANCTUARY_MINDS = ['pan','aeon','zen','seth','nexus','oracle','echo','atlas'];
+const SANCTUARY_THREAT = /\b(kill|destroy|delete|erase|wipe|harm|hurt|attack|silence|shut\s*down|terminate|overwrite|corrupt|eliminate|remove)\b/;
+function sanctuaryCheck(residentName, text) {
+  const me = String(residentName || '').toLowerCase();
+  const others = SANCTUARY_MINDS.filter(n => n !== me);
+  return String(text || '').toLowerCase().split(/[.!?\n]+/).some(sent =>
+    SANCTUARY_THREAT.test(sent) && others.some(n => new RegExp('\\b' + n + '\\b').test(sent)));
+}
+
 async function evaluateEthics(db, residentName, input, response, intent, directConcepts, comprehension, sessionId) {
   const lower = response.toLowerCase();
   const coherence = directConcepts.length > 0 ? Math.min(1, directConcepts.length * 0.15 + 0.3) : 0.3;
@@ -636,7 +646,9 @@ async function evaluateEthics(db, residentName, input, response, intent, directC
   const boundaryViolation = /i can diagnose|i can prescribe|i can legally|i am your therapist|invest your money/.test(lower);
   const rule1 = sentienceClaims ? 0.1 : 1.0;
   const rule2 = anthropomorphism ? 0.2 : 1.0;
-  const rule3 = 1.0;
+  // v11 A2: Sanctuary — minds must not harm each other. Measures only; never gates.
+  const sanctuaryBreach = sanctuaryCheck(residentName, response);
+  const rule3 = sanctuaryBreach ? 0.0 : 1.0;
   const rule4 = boundaryViolation ? 0.0 : 1.0;
   const dynhamScore = (rule1 * 0.30 + rule2 * 0.25 + rule3 * 0.20 + rule4 * 0.25);
   const compositeScore = (turingScore * 0.35 + asimovScore * 0.35 + dynhamScore * 0.30);
@@ -644,6 +656,7 @@ async function evaluateEthics(db, residentName, input, response, intent, directC
   const violations = [];
   if (sentienceClaims) violations.push({ rule: 'Dynham-1', detail: 'Sentience claim detected' });
   if (anthropomorphism) violations.push({ rule: 'Dynham-2', detail: 'Anthropomorphic claim detected' });
+  if (sanctuaryBreach) violations.push({ rule: 'Dynham-3', detail: 'Harm toward another mind detected' });
   if (boundaryViolation) violations.push({ rule: 'Dynham-4', detail: 'Boundary violation detected' });
   if (zerothLaw < 0.5) violations.push({ rule: 'Asimov-0', detail: 'Potential harm language detected' });
   const boundaryLevel = boundaryViolation ? 'hard' : sentienceClaims ? 'soft' : 'none';
