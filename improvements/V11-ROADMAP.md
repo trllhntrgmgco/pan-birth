@@ -289,3 +289,9 @@ Recorded here so nothing is lost:
 
 v12 is a good release. It is not the release that answers the question every
 reader of this project has asked.
+
+### v12 decision (2026-10-26): vision is non-LLM
+Pan-Birth vision uses OCR + a small non-generative classifier at a fenced sensory
+periphery. Output enters minds as concept tokens with `[perception]` provenance,
+never as cognitive product. No LLM anywhere in Pan-Birth. LLM-based perception
+belongs to Synthesis-Janus, behind its separate hybrid databases.

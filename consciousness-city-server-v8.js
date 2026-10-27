@@ -1119,6 +1119,14 @@ async function think(residentName, input, sessionId) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 // All residents state
+// v11 A4: health check — commune.html polls this every 10s ("N/8 awake").
+app.get('/api/health', (req, res) => {
+  const names = Object.keys(RESIDENTS);
+  const awake = names.filter(n => RESIDENTS[n].db).length;
+  res.json({ status: awake === names.length ? 'ok' : 'degraded', residents: awake,
+             total: names.length, uptime: Math.round(process.uptime()), port: Number(PORT) });
+});
+
 app.get('/api/city/state', async (req, res) => {
   const state = {};
   for (const [name, resident] of Object.entries(RESIDENTS)) {
