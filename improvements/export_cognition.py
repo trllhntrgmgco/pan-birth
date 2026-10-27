@@ -40,8 +40,7 @@ Q_ETHICS = """SELECT
 
 Q_EPISODES = """SELECT
       timestamp, speaker, modality,
-      length(concepts_activated) - length(replace(concepts_activated, ',', '')) +
-        (CASE WHEN concepts_activated IN ('[]','') THEN -1 ELSE 0 END) AS activation_breadth,
+      (CASE WHEN json_valid(concepts_activated) THEN json_array_length(concepts_activated) ELSE 0 END) AS activation_breadth,
       length(content) AS content_len
     FROM episodes ORDER BY id;"""
 
