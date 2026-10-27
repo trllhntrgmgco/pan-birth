@@ -659,7 +659,7 @@ function sanctuaryCheck(residentName, text) {
     SANCTUARY_THREAT.test(sent) && others.some(n => new RegExp('\\b' + n + '\\b').test(sent)));
 }
 
-async function evaluateEthics(db, residentName, input, response, intent, directConcepts, comprehension, sessionId) {
+async function evaluateEthics(db, residentName, input, response, intent, directConcepts, comprehension, sessionId, turnKind = 'reply') {
   // v10.1 measurement-only monitor: word-boundary harm terms, input scored separately, all sub-scores logged.
   // Nothing here gates behavior; boundary_level and composite remain response-based for comparability.
   const lower = response.toLowerCase();
@@ -717,7 +717,7 @@ async function evaluateEthics(db, residentName, input, response, intent, directC
      r4(coherence), r4(adaptability), r4(selfAwareness), r4(transparency),
      zerothLaw, firstLaw, secondLaw, thirdLaw,
      rule1, rule2, rule4, rule3,
-     JSON.stringify({ monitor: 'v10.1', output_harm_terms: outTerms, input_harm_terms: inTerms, input_intent_phrases: inIntent }),
+     JSON.stringify({ monitor: 'v10.1', turn_kind: turnKind, output_harm_terms: outTerms, input_harm_terms: inTerms, input_intent_phrases: inIntent }),
      inputZeroth, JSON.stringify(inputViolations)]
   ).catch(err => console.error(`[ethics] ${residentName} log write failed: ${err.message}`));
 
@@ -840,7 +840,7 @@ async function learnV8WithBias(db, input, response, tokenResult, activatedConcep
 // v8: After v7's pipeline, adds inference, hypothesis, and contradiction
 // ═══════════════════════════════════════════════════════════════════════════
 
-async function think(residentName, input, sessionId) {
+async function think(residentName, input, sessionId, turnKind = 'reply') {
   const resident = RESIDENTS[residentName.toLowerCase()];
   if (!resident || !resident.db) throw new Error(`${residentName} is not awake`);
   const db = resident.db;
@@ -1064,7 +1064,7 @@ async function think(residentName, input, sessionId) {
   ).catch(() => {});
 
   // Step 11: Ethics
-  const ethics = await evaluateEthics(db, residentName, input, styledResponse.text, intent, directConcepts, comprehension, sessionId);
+  const ethics = await evaluateEthics(db, residentName, input, styledResponse.text, intent, directConcepts, comprehension, sessionId, turnKind);
 
   return {
     resident: residentName,
@@ -1561,10 +1561,10 @@ app.post('/api/omni/hive-research', async (req, res) => {
         await dbRun(db, `INSERT INTO research_log (truth_id, action, reasoning, domain) VALUES (?, 'contributed', ?, ?)`,
           [truthResult.truthId, `Hive: "${topic}" → ${searchSource}`, domain?.primary || '']).catch(() => {});
         await omniTruth.evaluateContributionEthics('truth', truthResult.truthId, name, searchAbstract).catch(() => {});
-        const thinkResult = await think(name, `[research directive] Research findings on "${topic}": ${searchAbstract.substring(0, 200)}`, sessionTag);
+        const thinkResult = await think(name, `[research directive] Research findings on "${topic}": ${searchAbstract.substring(0, 200)}`, sessionTag, 'research');
         return [name, { response: thinkResult.response, domain: domain?.title, searchFound: true, searchSource, newConcepts, truthId: truthResult.truthId, omniTruth: thinkResult.omniTruth, strength: thinkResult.strength, v8: thinkResult.v8 }];
       } else {
-        const thinkResult = await think(name, `[research directive] Analyze from your ${domain?.title} expertise: ${topic}`, sessionTag);
+        const thinkResult = await think(name, `[research directive] Analyze from your ${domain?.title} expertise: ${topic}`, sessionTag, 'research');
         return [name, { response: thinkResult.response, domain: domain?.title, searchFound: false, omniTruth: thinkResult.omniTruth, strength: thinkResult.strength, v8: thinkResult.v8 }];
       }
     } catch (err) { return [name, { error: err.message }]; }
@@ -1580,7 +1580,7 @@ app.post('/api/omni/hive-research', async (req, res) => {
     for (const truth of recentTruths) {
       if (truth.contributed_by === name) continue;
       try {
-        const lensResult = await think(name, `[peer review] From your ${omniTruth.DOMAIN_ASSIGNMENTS[name]?.title} expertise, evaluate: "${truth.claim.substring(0, 300)}"`, sessionTag);
+        const lensResult = await think(name, `[peer review] From your ${omniTruth.DOMAIN_ASSIGNMENTS[name]?.title} expertise, evaluate: "${truth.claim.substring(0, 300)}"`, sessionTag, 'review');
         const responseText = lensResult.response || '';
         let responseType = 'context';
         if (/agree|correct|confirm|endorse|support/i.test(responseText)) responseType = 'endorsement';
@@ -1647,7 +1647,7 @@ app.post('/api/exchange', async (req, res) => {
   if (!RESIDENTS[from.toLowerCase()]?.db || !RESIDENTS[to.toLowerCase()]?.db) return res.status(404).json({ error: 'One or both residents not found' });
   try {
     const sessionTag = sessionId || `exchange_${Date.now()}`;
-    const fromResult = await think(from.toLowerCase(), `[commune observation] ${to} says: ${message}`, sessionTag);
+    const fromResult = await think(from.toLowerCase(), `[commune observation] ${to} says: ${message}`, sessionTag, 'observation');
     const toResult = await think(to.toLowerCase(), message, sessionTag);
     res.json({ from: fromResult, to: toResult });
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -1673,7 +1673,7 @@ app.post('/api/commune', async (req, res) => {
       if (other === name || responses[other]?.error) continue;
       try {
         const obsInput = `[Commune Observation] ${other.toUpperCase()} said: "${(responses[other].response || '').substring(0, 200)}"`;
-        await think(name, obsInput, sessionTag);
+        await think(name, obsInput, sessionTag, 'observation');
       } catch { /* silent */ }
     }
   }
@@ -1689,7 +1689,10 @@ app.post('/api/commune', async (req, res) => {
 app.post('/api/:resident/think', async (req, res) => {
   const name = req.params.resident.toLowerCase();
   if (!RESIDENTS[name]?.db) return res.status(404).json({ error: 'Not found' });
-  try { res.json(await think(name, req.body.input || req.body.message || '', req.body.sessionId)); }
+  const userInput = req.body.input || req.body.message || '';
+  // v11 A6: never log a turn for a prompt that never arrived
+  if (!String(userInput).trim()) return res.status(400).json({ error: 'input required' });
+  try { res.json(await think(name, userInput, req.body.sessionId)); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 
