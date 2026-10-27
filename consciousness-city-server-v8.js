@@ -808,8 +808,13 @@ async function learnV8WithBias(db, input, response, tokenResult, activatedConcep
     const isTeaching = intent === 'teaching' && content.length >= 5;
     const isDefinition = intent === 'definition' && content.length >= 3;
     const isSubstantive = intent === 'statement' && content.length >= 8 && input.length >= 50;
-    const isInternalMessage = input.startsWith('[commune observation]') || input.startsWith('[research directive]') || input.startsWith('[peer review]');
-    const shouldContribute = (isTeaching || isDefinition || isSubstantive) && !isInternalMessage;
+    // v11 D: case-insensitive internal check (commune sends "[Commune Observation]");
+    // questions and instructions are never stored as claims.
+    const inputLc = input.trim().toLowerCase();
+    const isInternalMessage = inputLc.startsWith('[commune observation]') || inputLc.startsWith('[research directive]') || inputLc.startsWith('[peer review]');
+    const isQuestionOrInstruction = /\?\s*$/.test(inputLc) ||
+      /^(what|who|why|how|when|where|which|is|are|do|does|can|could|would|should|explain|describe|tell me|define|list|compare|show)\b/.test(inputLc);
+    const shouldContribute = (isTeaching || isDefinition || isSubstantive) && !isInternalMessage && !isQuestionOrInstruction;
 
     if (shouldContribute) {
       const domain = omniTruth.DOMAIN_ASSIGNMENTS[residentName.toLowerCase()]?.primary || 'general';
