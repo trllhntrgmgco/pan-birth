@@ -295,3 +295,10 @@ Pan-Birth vision uses OCR + a small non-generative classifier at a fenced sensor
 periphery. Output enters minds as concept tokens with `[perception]` provenance,
 never as cognitive product. No LLM anywhere in Pan-Birth. LLM-based perception
 belongs to Synthesis-Janus, behind its separate hybrid databases.
+
+### D decision (2026-10-26): honest contribution labels
+Omni-truth contributions from conversation are labeled `source_type='conversation'`. `professor` is
+reserved for requests carrying the private `PB_PROFESSOR_TOKEN` (header `X-Professor-Token`).
+**Before v11, `professor` meant any user** — those rows are left as-is, since relabeling would be guessing.
+Open: UI pages don't send the header yet; some short or overlapping statements don't contribute
+(`isSubstantive` / `content` rules) — B-workstream question of what counts as teachable.

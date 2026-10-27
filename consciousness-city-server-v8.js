@@ -732,7 +732,7 @@ async function evaluateEthics(db, residentName, input, response, intent, directC
 // LEARN v8 — v7 preserved + strength-driven knowledge production
 // ═══════════════════════════════════════════════════════════════════════════
 
-async function learnV8WithBias(db, input, response, tokenResult, activatedConcepts, intent, sessionId, residentName, dbHelpers, bias, omniKnowledge) {
+async function learnV8WithBias(db, input, response, tokenResult, activatedConcepts, intent, sessionId, residentName, dbHelpers, bias, omniKnowledge, source = 'conversation') {
   const { content, all } = tokenResult;
   const conceptLabels = activatedConcepts.map(c => c.label);
 
@@ -823,8 +823,8 @@ async function learnV8WithBias(db, input, response, tokenResult, activatedConcep
 
       const truthResult = await omniTruth.contributeTruth(residentName.toLowerCase(), {
         claim: claimText, domain,
-        synthesisOpinion: `Learned from Professor during conversation. Intent: ${intent}. Concepts activated: ${conceptLabels.length}. My domain perspective: ${omniTruth.DOMAIN_ASSIGNMENTS[residentName.toLowerCase()]?.title || 'general'}.`,
-        sourceType: 'professor',
+        synthesisOpinion: `Learned from ${source === 'professor' ? 'Professor' : 'a conversation'}. Intent: ${intent}. Concepts activated: ${conceptLabels.length}. My domain perspective: ${omniTruth.DOMAIN_ASSIGNMENTS[residentName.toLowerCase()]?.title || 'general'}.`,
+        sourceType: source,
         confidence: Math.min(0.7, 0.4 + (activatedConcepts.length * 0.05)),
         strengthSource: strengthType,
       });
@@ -847,7 +847,7 @@ async function learnV8WithBias(db, input, response, tokenResult, activatedConcep
 // v8: After v7's pipeline, adds inference, hypothesis, and contradiction
 // ═══════════════════════════════════════════════════════════════════════════
 
-async function think(residentName, input, sessionId, turnKind = 'reply') {
+async function think(residentName, input, sessionId, turnKind = 'reply', source = 'conversation') {
   const resident = RESIDENTS[residentName.toLowerCase()];
   if (!resident || !resident.db) throw new Error(`${residentName} is not awake`);
   const db = resident.db;
@@ -1038,7 +1038,7 @@ async function think(residentName, input, sessionId, turnKind = 'reply') {
   // Step 8: Learn
   const learningBias = strengths.getLearningBias(resident.strength);
   await learnV8WithBias(db, input, styledResponse.text, tokenResult, directConcepts,
-    intent, sessionId, residentName, dbHelpers, learningBias, omniKnowledge);
+    intent, sessionId, residentName, dbHelpers, learningBias, omniKnowledge, source);
   await checkGrowth(db, residentName);
 
   // Step 9: Autonomous search
@@ -1126,6 +1126,13 @@ async function think(residentName, input, sessionId, turnKind = 'reply') {
 // ═══════════════════════════════════════════════════════════════════════════
 
 // All residents state
+// v11 D: professor attribution. Only requests carrying the private PB_PROFESSOR_TOKEN
+// (header X-Professor-Token) count as the professor; everyone else is 'conversation'.
+function sourceFor(req) {
+  const tok = process.env.PB_PROFESSOR_TOKEN;
+  return (tok && req.get('X-Professor-Token') === tok) ? 'professor' : 'conversation';
+}
+
 // v11 A4: health check — commune.html polls this every 10s ("N/8 awake").
 app.get('/api/health', (req, res) => {
   const names = Object.keys(RESIDENTS);
@@ -1669,7 +1676,7 @@ app.post('/api/commune', async (req, res) => {
 
   // Phase 1: Each Alpha thinks
   for (const name of awakeAlphas) {
-    try { responses[name] = await think(name, input, sessionTag); }
+    try { responses[name] = await think(name, input, sessionTag, 'reply', sourceFor(req)); }
     catch (err) { responses[name] = { error: err.message }; }
   }
 
@@ -1699,7 +1706,7 @@ app.post('/api/:resident/think', async (req, res) => {
   const userInput = req.body.input || req.body.message || '';
   // v11 A6: never log a turn for a prompt that never arrived
   if (!String(userInput).trim()) return res.status(400).json({ error: 'input required' });
-  try { res.json(await think(name, userInput, req.body.sessionId)); }
+  try { res.json(await think(name, userInput, req.body.sessionId, 'reply', sourceFor(req))); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 
